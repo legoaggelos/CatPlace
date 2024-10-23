@@ -1,0 +1,60 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.3.4'
+	id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'com.legoaggelos'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springModulithVersion', "1.2.4")
+	set('springShellVersion', "3.3.3")
+}
+dependencies {
+implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher' // See https://docs.gradle.org/8.3/userguide/upgrading_version_8.html#test_framework_implementation_dependencies
+
+    implementation 'org.springframework.data:spring-data-jdbc'
+    implementation 'com.h2database:h2'
+}
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
+		mavenBom "org.springframework.shell:spring-shell-dependencies:${springShellVersion}"
+		//mavenBom 'org.springframework.security:spring-security-bom:3.1.4'
+	}
+}
+tasks.named('test') {
+	useJUnitPlatform()
+}
+// This section causes useful test output to go to the terminal.
+test {
+    testLogging {
+        events "passed", "skipped", "failed" //, "standardOut", "standardError"
+
+        showExceptions true
+        exceptionFormat "full"
+        showCauses true
+        showStackTraces true
+
+        // Change to `true` for more verbose test output
+        showStandardStreams = false
+    }
+}
