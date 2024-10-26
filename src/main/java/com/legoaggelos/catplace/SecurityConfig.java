@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,6 +16,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 //@EnableWebSecurity
+@EnableWebSecurity(debug = true)
 @Configuration
 public class SecurityConfig {
 	 @Bean
@@ -22,7 +24,8 @@ public class SecurityConfig {
 	        http
 	                .authorizeHttpRequests(request -> request
 	                        .requestMatchers("/cats/**")
-	                        .hasRole("CAT-OWNER"))
+	                        .hasRole("CAT-OWNER")
+	                       )
 	                .httpBasic(Customizer.withDefaults())
 	                .csrf(csrf -> csrf.disable());
 	        return http.build();
@@ -34,11 +37,12 @@ public class SecurityConfig {
 	    }
 
 	    @Bean
-	    UserDetailsService testOnlyUsers(PasswordEncoder passwordEncoder) {
+	    InMemoryUserDetailsManager testOnlyUsers(PasswordEncoder passwordEncoder) {
 	        User.UserBuilder users = User.builder();
 	        UserDetails legoaggelos = users
 	                .username("legoaggelos")
 	                .password(passwordEncoder.encode("abc123"))
+	               
 	                .roles("CAT-OWNER")
 	                .build();
 	        UserDetails hankOwnsNoCards = users

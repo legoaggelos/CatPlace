@@ -1,4 +1,4 @@
-INSERT INTO CAT(ID, NAME, AGEINMONTHS, OWNER) VALUES (1, 'psilos', 4, 'legoaggelos');
-INSERT INTO CAT(ID, NAME, AGEINMONTHS, OWNER) VALUES (2, 'kontos', 69, 'legoaggelos');
-INSERT INTO CAT(ID, NAME, AGEINMONTHS, OWNER) VALUES (3, 'mesos', 31, 'legoaggelos');
-INSERT INTO CAT(ID, NAME, AGEINMONTHS, OWNER) VALUES (4, 'arabas', 1, 'kat');
+INSERT INTO CAT(ID, NAME, AGE_IN_MONTHS, OWNER) VALUES (5, 'psilos', 4, 'legoaggelos');
+INSERT INTO CAT(ID, NAME, AGE_IN_MONTHS, OWNER) VALUES (6, 'kontos', 69, 'legoaggelos');
+INSERT INTO CAT(ID, NAME, AGE_IN_MONTHS, OWNER) VALUES (3, 'mesos', 31, 'legoaggelos');
+INSERT INTO CAT(ID, NAME, AGE_IN_MONTHS, OWNER) VALUES (4, 'arabas', 1, 'kat');
