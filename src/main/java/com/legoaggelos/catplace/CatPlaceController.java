@@ -5,11 +5,13 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +25,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RestController
 @RequestMapping("/cats")
 public class CatPlaceController {
+	@Autowired
+	InMemoryUserDetailsManager inMemoryUserDetailsManager;
 	private final CatPlaceRepository repository;
 	private CatPlaceController(CatPlaceRepository repository) {
 	      this.repository = repository;
@@ -55,7 +59,7 @@ public class CatPlaceController {
 	    }
 	    @PostMapping
 	    private ResponseEntity<Void> createCat(@RequestBody Cat newCatRequest, UriComponentsBuilder ucb, Principal principal) {
-	        Cat catWithOwner = new Cat(null, newCatRequest.name(), newCatRequest.ageInMonths(), principal.getName());
+	        Cat catWithOwner = new Cat(null, newCatRequest.name(), newCatRequest.ageInMonths(), principal.getName(), newCatRequest.profilePicture());
 	        Cat savedCat = repository.save(catWithOwner);
 	        URI locationOfNewCat = ucb
 	                .path("/cats/{id}")
@@ -67,7 +71,7 @@ public class CatPlaceController {
 	    private ResponseEntity<Void> putCat(@PathVariable Long requestedId, @RequestBody Cat catUpdate, Principal principal) {
 	    	Cat cat = findCat(requestedId,principal);
 	    	if(cat!=null) {
-	    		Cat update = new Cat(requestedId, catUpdate.name(),cat.ageInMonths(), principal.getName());
+	    		Cat update = new Cat(requestedId, catUpdate.name(),cat.ageInMonths(), principal.getName(), catUpdate.profilePicture());
 	    		repository.save(update);
 	    		return ResponseEntity.noContent().build();
 	    	}

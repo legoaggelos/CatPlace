@@ -157,7 +157,7 @@ class CatPlaceApplicationTests {
     void shouldRejectUsersWhoAreNotCardOwners() {
         ResponseEntity<String> response = restTemplate
                 .withBasicAuth("hank-owns-no-cats", "qrs456")
-                .getForEntity("/cashcards/4", String.class);
+                .getForEntity("/Cats/4", String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
@@ -171,7 +171,7 @@ class CatPlaceApplicationTests {
     @Test
     @DirtiesContext
     void shouldCreateANewCat() {
-        Cat newCat = new Cat(null, "pekos", 12, null);
+        Cat newCat = new Cat(null, "pekos", 12, null, null);
         ResponseEntity<Void> createResponse = restTemplate
                 .withBasicAuth("legoaggelos", "abc123")
                 .postForEntity("/cats", newCat, Void.class);
@@ -195,7 +195,7 @@ class CatPlaceApplicationTests {
     @Test
     @DirtiesContext
     void shouldUpdateAnExistingCat() {
-    	Cat catUpdate = new Cat(null, "mesos v2",5,null);
+    	Cat catUpdate = new Cat(null, "mesos v2",5,null, null);
     	HttpEntity<Cat> request = new HttpEntity<>(catUpdate);
     	ResponseEntity<Void> response = restTemplate
     			.withBasicAuth("legoaggelos", "abc123")
@@ -218,7 +218,7 @@ class CatPlaceApplicationTests {
     }
     @Test
     void shouldNotUpdateACatThatDoesNotExist() {
-        Cat unknownCat = new Cat(null, "mesos v2",5,null);
+        Cat unknownCat = new Cat(null, "mesos v2",5,null, null);
         HttpEntity<Cat> request = new HttpEntity<>(unknownCat);
         ResponseEntity<Void> response = restTemplate
                 .withBasicAuth("legoaggelos", "abc123")
@@ -228,7 +228,7 @@ class CatPlaceApplicationTests {
 
     @Test
     void shouldNotUpdateACatThatIsOwnedBySomeoneElse() {
-        Cat katsCat = new Cat(null, "mesos v2",5,null);
+        Cat katsCat = new Cat(null, "mesos v2",5,null, null);
         HttpEntity<Cat> request = new HttpEntity<>(katsCat);
         ResponseEntity<Void> response = restTemplate
                 .withBasicAuth("legoaggelos", "abc123")
@@ -237,7 +237,7 @@ class CatPlaceApplicationTests {
     }
     @Test
     @DirtiesContext
-    void shouldDeleteAnExistingCashCard() {
+    void shouldDeleteAnExistingCat() {
         ResponseEntity<Void> response = restTemplate
                 .withBasicAuth("legoaggelos", "abc123")
                 .exchange("/cats/5", HttpMethod.DELETE, null, Void.class);
@@ -249,14 +249,14 @@ class CatPlaceApplicationTests {
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
     @Test
-    void shouldNotDeleteACashCardThatDoesNotExist() {
+    void shouldNotDeleteACatThatDoesNotExist() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("legoaggelos", "abc123")
                 .exchange("/cats/99999", HttpMethod.DELETE, null, Void.class);
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
     @Test
-    void shouldNotAllowDeletionOfCashCardsTheyDoNotOwn() {
+    void shouldNotAllowDeletionOfCatsTheyDoNotOwn() {
    
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("legoaggelos", "abc123")

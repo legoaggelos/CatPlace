@@ -1,5 +1,6 @@
 package com.legoaggelos.catplace;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -15,10 +16,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-//@EnableWebSecurity
+
 @EnableWebSecurity(debug = true)
 @Configuration
 public class SecurityConfig {
+
 	 @Bean
 	    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 	        http
@@ -57,4 +59,5 @@ public class SecurityConfig {
 	                .build();
 	        return new InMemoryUserDetailsManager(legoaggelos, hankOwnsNoCards, kat);
 	    }
+	    
 }
