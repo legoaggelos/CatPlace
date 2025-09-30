@@ -2,8 +2,16 @@ package com.legoaggelos.catplace;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Principal;
+import java.sql.Blob;
+import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -25,6 +33,9 @@ import com.jayway.jsonpath.JsonPath;
 
 import net.minidev.json.JSONArray;
 
+import javax.sql.rowset.serial.SerialBlob;
+import javax.swing.*;
+
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CatPlaceApplicationTests {
@@ -32,7 +43,7 @@ class CatPlaceApplicationTests {
     TestRestTemplate restTemplate;
 
     @Test
-    void shouldReturnACatWhenDataIsSaved() {
+    void shouldReturnACatWhenDataIsSaved() throws InterruptedException {
         ResponseEntity<String> response = restTemplate
                 .withBasicAuth("legoaggelos", "abc123")
                 .getForEntity("/cats/5", String.class);
@@ -47,7 +58,10 @@ class CatPlaceApplicationTests {
         
         Number ageInMonths = documentContext.read("$.ageInMonths");
         assertThat(ageInMonths).isEqualTo(4);
-        
+
+        var x = documentContext.read("$.profilePicture");
+
+        assertThat(x).isNotNull();
     }
     
     @Test
