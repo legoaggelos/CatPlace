@@ -46,7 +46,6 @@ public class SecurityConfig {
 	        UserDetails legoaggelos = users
 	                .username("legoaggelos")
 	                .password(passwordEncoder.encode("abc123"))
-	               
 	                .roles("CAT-OWNER")
 	                .build();
 	        UserDetails hankOwnsNoCards = users

@@ -12,6 +12,7 @@ import java.security.Principal;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -43,29 +44,30 @@ class CatPlaceApplicationTests {
     TestRestTemplate restTemplate;
 
     @Test
-    void shouldReturnACatWhenDataIsSaved() throws InterruptedException {
+    void shouldReturnACatWhenDataIsSaved() throws InterruptedException, IOException {
+        shouldCreateANewCat();
         ResponseEntity<String> response = restTemplate
                 .withBasicAuth("legoaggelos", "abc123")
-                .getForEntity("/cats/5", String.class);
+                .getForEntity("/cats/1", String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         DocumentContext documentContext = JsonPath.parse(response.getBody());
         Number id = documentContext.read("$.id");
-        assertThat(id).isEqualTo(5);
+        assertThat(id).isEqualTo(1);
 
         String name = documentContext.read("$.name");
-        assertThat(name).isEqualTo("psilos");
+        assertThat(name).isEqualTo("pekos");
         
         Number ageInMonths = documentContext.read("$.ageInMonths");
-        assertThat(ageInMonths).isEqualTo(4);
+        assertThat(ageInMonths).isEqualTo(12);
 
         var x = documentContext.read("$.profilePicture");
-
         assertThat(x).isNotNull();
+        assertThat((Base64.getDecoder().decode((String) x))).isEqualTo(Files.readAllBytes(Paths.get("4.jpg")));
     }
     
     @Test
-    void shouldReturnACatWhenDataIsSavedAndTheyDoNotOwnTheCard() {
+    void shouldReturnACatWhenDataIsSavedAndTheyDoNotOwnTheCard() throws IOException {
         ResponseEntity<String> response = restTemplate
                 .withBasicAuth("kat", "xyz789")
                 .getForEntity("/cats/5", String.class);
@@ -80,7 +82,10 @@ class CatPlaceApplicationTests {
         
         Number ageInMonths = documentContext.read("$.ageInMonths");
         assertThat(ageInMonths).isEqualTo(4);
-        
+
+        /*var x = documentContext.read("$.profilePicture");
+        assertThat(x).isNotNull(); excluded because it needs to be created via code for the default to work, not the default data
+        assertThat((Base64.getDecoder().decode((String) x))).isEqualTo(Files.readAllBytes(Paths.get("4.jpg")));*/
     }
     @Test
     void shouldNotReturnACatWithAnUnknownId() {
@@ -92,7 +97,7 @@ class CatPlaceApplicationTests {
         assertThat(response.getBody()).isBlank();
     }
     @Test
-    void shouldReturnAllCatsWhenListIsRequested() {
+    void shouldReturnAllCatsWhenListIsRequested() throws IOException {
         ResponseEntity<String> response = restTemplate
                 .withBasicAuth("legoaggelos", "abc123")
                 .getForEntity("/cats", String.class);
@@ -110,6 +115,10 @@ class CatPlaceApplicationTests {
         
         JSONArray ageInMonths = documentContext.read("$..ageInMonths");
         assertThat(ageInMonths).containsExactlyInAnyOrder(4, 69, 31);
+
+        JSONArray x = documentContext.read("$..profilePicture");
+        assertThat(x).isNotNull();
+        //assertThat(x).containsExactlyInAnyOrder(Files.readAllBytes(Paths.get("4.jpg"))); excluded because it needs to be created via code for the default to work, not the default data
     }
 
     @Test
@@ -184,7 +193,7 @@ class CatPlaceApplicationTests {
     }
     @Test
     @DirtiesContext
-    void shouldCreateANewCat() {
+    void shouldCreateANewCat() throws IOException {
         Cat newCat = new Cat(null, "pekos", 12, null, null);
         ResponseEntity<Void> createResponse = restTemplate
                 .withBasicAuth("legoaggelos", "abc123")
@@ -201,21 +210,26 @@ class CatPlaceApplicationTests {
         Number id = documentContext.read("$.id");
         Integer ageInMonths = documentContext.read("$.ageInMonths");
         String name = documentContext.read("$.name");
+        byte[] pfp = Base64.getDecoder().decode((String) documentContext.read("$.profilePicture"));
 
+        assertThat(pfp).isEqualTo(Files.readAllBytes(Paths.get("4.jpg")));
         assertThat(id).isNotNull();
         assertThat(ageInMonths).isEqualTo(12);
         assertThat(name).isEqualTo("pekos");
     }
     @Test
     @DirtiesContext
-    void shouldUpdateAnExistingCat() {
-    	Cat catUpdate = new Cat(null, "mesos v2",5,null, null);
+    void shouldUpdateAnExistingCat() throws IOException, SQLException {
+        SerialBlob samplePfp = new SerialBlob(Files.readAllBytes(Paths.get("img.png")));
+
+    	Cat catUpdate = new Cat(null, "mesos v2",5,null, samplePfp);
     	HttpEntity<Cat> request = new HttpEntity<>(catUpdate);
+
     	ResponseEntity<Void> response = restTemplate
     			.withBasicAuth("legoaggelos", "abc123")
     			.exchange("/cats/5", HttpMethod.PUT, request, Void.class);
     	assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-    	
+
     	ResponseEntity<String> getResponse = restTemplate.withBasicAuth("legoaggelos", "abc123")
     			.getForEntity("/cats/5", String.class);
     	assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -229,6 +243,10 @@ class CatPlaceApplicationTests {
     	
     	String name = documentContext.read("$.name");
     	assertThat(name).isEqualTo("mesos v2");
+
+        SerialBlob pfp = new SerialBlob(((String) documentContext.read("$.profilePicture")).getBytes());
+
+        assertThat(pfp).isEqualTo(samplePfp);
     }
     @Test
     void shouldNotUpdateACatThatDoesNotExist() {

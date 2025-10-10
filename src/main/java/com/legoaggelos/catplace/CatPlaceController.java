@@ -1,7 +1,12 @@
 package com.legoaggelos.catplace;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.Principal;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,68 +27,98 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.sql.rowset.serial.SerialBlob;
+import javax.sql.rowset.serial.SerialException;
+
 @RestController
 @RequestMapping("/cats")
 public class CatPlaceController {
-	@Autowired
-	InMemoryUserDetailsManager inMemoryUserDetailsManager;
-	private final CatPlaceRepository repository;
-	private CatPlaceController(CatPlaceRepository repository) {
-	      this.repository = repository;
-	   }
-	@GetMapping
+    @Autowired
+    InMemoryUserDetailsManager inMemoryUserDetailsManager;
+    private final CatPlaceRepository repository;
+
+    private CatPlaceController(CatPlaceRepository repository) {
+        this.repository = repository;
+    }
+
+    @GetMapping
     ResponseEntity<List<Cat>> findAll(Pageable pageable, Principal principal) {
         Page<Cat> page = repository.findByOwner(principal.getName(),
                 PageRequest.of(
-                    pageable.getPageNumber(),
+                        pageable.getPageNumber(),
                         pageable.getPageSize(),
                         pageable.getSortOr(Sort.by(Sort.Direction.ASC, "name"))
                 ));
         return ResponseEntity.ok(page.getContent());
     }
-	@GetMapping("/{requestedId}")
-	ResponseEntity<Cat> findById(@PathVariable Long requestedId){
-		//everyone should be able to see each other's cats.
-		Optional<Cat> cat = findCat(requestedId);
-		if (cat.isPresent()) {
+
+    @GetMapping("/{requestedId}")
+    ResponseEntity<Cat> findById(@PathVariable Long requestedId) {
+        //everyone should be able to see each other's cats.
+        Optional<Cat> cat = findCat(requestedId);
+        if (cat.isPresent()) {
             return ResponseEntity.ok(cat.get());
         } else {
             return ResponseEntity.notFound().build();
         }
-	}
-	 private Optional<Cat> findCat(Long requestedId) {
-	        return repository.findById(requestedId);
-	    }
-	 private Cat findCat(Long requestedId, Principal principal) {
-	        return repository.findByIdAndOwner(requestedId, principal.getName());
-	    }
-	    @PostMapping
-	    private ResponseEntity<Void> createCat(@RequestBody Cat newCatRequest, UriComponentsBuilder ucb, Principal principal) {
-	        Cat catWithOwner = new Cat(null, newCatRequest.name(), newCatRequest.ageInMonths(), principal.getName(), newCatRequest.profilePicture());
-	        Cat savedCat = repository.save(catWithOwner);
-	        URI locationOfNewCat = ucb
-	                .path("/cats/{id}")
-	                .buildAndExpand(savedCat.id())
-	                .toUri();
-	        return ResponseEntity.created(locationOfNewCat).build();
-	    }
-	    @PutMapping("/{requestedId}")
-	    private ResponseEntity<Void> putCat(@PathVariable Long requestedId, @RequestBody Cat catUpdate, Principal principal) {
-	    	Cat cat = findCat(requestedId,principal);
-	    	if(cat!=null) {
-	    		Cat update = new Cat(requestedId, catUpdate.name(),cat.ageInMonths(), principal.getName(), catUpdate.profilePicture());
-	    		repository.save(update);
-	    		return ResponseEntity.noContent().build();
-	    	}
-	        return ResponseEntity.notFound().build();
-	    }
-	    @DeleteMapping("/{id}")
-	    private ResponseEntity<Void> deleteCat(@PathVariable Long id, Principal principal ) {
-	      
-	        if (repository.existsByIdAndOwner(id, principal.getName())) {
-	        		repository.deleteById(id);
-	        		return ResponseEntity.noContent().build();
-	    	}
-	    	return ResponseEntity.notFound().build();
-	    }
+    }
+
+    private Optional<Cat> findCat(Long requestedId) {
+        return repository.findById(requestedId);
+    }
+
+    private Cat findCat(Long requestedId, Principal principal) {
+        return repository.findByIdAndOwner(requestedId, principal.getName());
+    }
+
+    @PostMapping
+    private ResponseEntity<Void> createCat(@RequestBody Cat newCatRequest, UriComponentsBuilder ucb, Principal principal, OutputStream outputStream){
+        SerialBlob profilePicture = newCatRequest.profilePicture();
+        System.out.println("12345");
+        System.out.println(newCatRequest.name());
+        System.out.println(newCatRequest.profilePicture()==null);
+        try {
+            System.out.println(profilePicture.length());
+        } catch (Exception e) {
+
+        }
+        try {
+            if (profilePicture == null) {
+                profilePicture = new SerialBlob(Files.readAllBytes(Path.of("4.jpg")));
+            }
+        } catch (SQLException | IOException e) {
+            System.out.println("Error: couldn't read default profile picture. This is a major bug."); //TODO proper logging
+        }
+        Cat catWithOwner = new Cat(null, newCatRequest.name(), newCatRequest.ageInMonths(), principal.getName(), profilePicture);
+        System.out.println(catWithOwner.name());
+        System.out.println(catWithOwner.owner());
+        System.out.println(catWithOwner.ageInMonths());
+        Cat savedCat = repository.save(catWithOwner);
+        URI locationOfNewCat = ucb
+                .path("/cats/{id}")
+                .buildAndExpand(savedCat.id())
+                .toUri();
+        return ResponseEntity.created(locationOfNewCat).build();
+    }
+
+    @PutMapping("/{requestedId}")
+    private ResponseEntity<Void> putCat(@PathVariable Long requestedId, @RequestBody Cat catUpdate, Principal principal) {
+        Cat cat = findCat(requestedId, principal);
+        if (cat != null) {
+            Cat update = new Cat(requestedId, catUpdate.name(), cat.ageInMonths(), principal.getName(), catUpdate.profilePicture());
+            repository.save(update);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{id}")
+    private ResponseEntity<Void> deleteCat(@PathVariable Long id, Principal principal) {
+
+        if (repository.existsByIdAndOwner(id, principal.getName())) {
+            repository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
 }
