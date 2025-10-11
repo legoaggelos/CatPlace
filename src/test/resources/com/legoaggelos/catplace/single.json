@@ -1,7 +1,9 @@
 {
   "id": 1,
   "name": "psilos",
-  "ageInMonths": 4,
+  "dateOfBirth": "2025-04-08T02:30:30Z",
   "owner": "legoaggelos",
-  "profilePicture": null
+  "profilePicture": null,
+  "bio": "tall cat",
+  "isAlive": true
 }

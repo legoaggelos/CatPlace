@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,7 +29,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.sql.rowset.serial.SerialBlob;
-import javax.sql.rowset.serial.SerialException;
 
 @RestController
 @RequestMapping("/cats")
@@ -81,7 +81,13 @@ public class CatPlaceController {
         } catch (SQLException | IOException e) {
             System.out.println("Error: couldn't read default profile picture. This is a major bug."); //TODO proper logging
         }
-        Cat catWithOwner = new Cat(null, newCatRequest.name(), newCatRequest.ageInMonths(), principal.getName(), profilePicture);
+        Cat catWithOwner = new Cat(null,
+                newCatRequest.name(),
+                newCatRequest.dateOfBirth(),
+                principal.getName(),
+                profilePicture,
+                newCatRequest.bio(),
+                OffsetDateTime.now().getYear()-newCatRequest.dateOfBirth().getYear()<30 && newCatRequest.isAlive()); //if the cat is over 30, realistically, it is dead.);
         Cat savedCat = repository.save(catWithOwner);
         URI locationOfNewCat = ucb
                 .path("/cats/{id}")
@@ -94,7 +100,13 @@ public class CatPlaceController {
     private ResponseEntity<Void> putCat(@PathVariable Long requestedId, @RequestBody Cat catUpdate, Principal principal) {
         Cat cat = findCat(requestedId, principal);
         if (cat != null) {
-            Cat update = new Cat(requestedId, catUpdate.name(), cat.ageInMonths(), principal.getName(), catUpdate.profilePicture());
+            Cat update = new Cat(requestedId,
+                    catUpdate.name(),
+                    cat.dateOfBirth(), //cant update date of birth!
+                    principal.getName(),
+                    catUpdate.profilePicture(),
+                    catUpdate.bio(),
+                    OffsetDateTime.now().getYear()-catUpdate.dateOfBirth().getYear()<30 && catUpdate.isAlive()); //if the cat is over 30, realistically, it is dead.
             repository.save(update);
             return ResponseEntity.noContent().build();
         }
