@@ -224,6 +224,7 @@ class CatPlaceApplicationTests {
 
     	Cat catUpdate = new Cat(null, "mesos v2",5,null, samplePfp);
     	HttpEntity<Cat> request = new HttpEntity<>(catUpdate);
+        assertThat(request.getBody().profilePicture()).isNotNull();
 
     	ResponseEntity<Void> response = restTemplate
     			.withBasicAuth("legoaggelos", "abc123")
@@ -244,9 +245,9 @@ class CatPlaceApplicationTests {
     	String name = documentContext.read("$.name");
     	assertThat(name).isEqualTo("mesos v2");
 
-        SerialBlob pfp = new SerialBlob(((String) documentContext.read("$.profilePicture")).getBytes());
+        SerialBlob pfp = new SerialBlob(Base64.getDecoder().decode((String) documentContext.read("$.profilePicture")));
 
-        assertThat(pfp).isEqualTo(samplePfp);
+        assertThat(pfp.getBinaryStream().readAllBytes()).isEqualTo(samplePfp.getBinaryStream().readAllBytes());
     }
     @Test
     void shouldNotUpdateACatThatDoesNotExist() {
