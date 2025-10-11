@@ -19,10 +19,10 @@ public class JsonTests {
 	@BeforeEach
 	void setUp() {
 		cats= new Cat[]{
-			new Cat(1L,"psilos", 4, "legoaggelos"),
-			new Cat(2L, "kontos", 69, "legoaggelos"),
-			new Cat(3L, "mesos", 31, "legoaggelos"),
-			new Cat(4L, "arabas", 1, "kat")
+			new Cat(1L,"psilos", 4, "legoaggelos", null),
+			new Cat(2L, "kontos", 69, "legoaggelos", null),
+			new Cat(3L, "mesos", 31, "legoaggelos", null),
+			new Cat(4L, "arabas", 1, "kat", null)
 		};
 	}
 	
@@ -53,7 +53,7 @@ public class JsonTests {
 						"owner": "legoaggelos"
 					}
 				""";
-		assertThat(json.parse(jsonString)).isEqualTo(new Cat(1L,"psilos",4,"legoaggelos"));
+		assertThat(json.parse(jsonString)).isEqualTo(new Cat(1L,"psilos",4,"legoaggelos", null));
 		assertThat(json.parseObject(jsonString).id()).isEqualTo(1);
 		assertThat(json.parseObject(jsonString).name()).isEqualTo("psilos");
 		assertThat(json.parseObject(jsonString).ageInMonths()).isEqualTo(4);
