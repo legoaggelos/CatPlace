@@ -16,13 +16,6 @@ public class CatPlaceApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(CatPlaceApplication.class, args);
-        try {
-            System.out.println(Arrays.toString(new SerialBlob(Files.readAllBytes(Path.of("4.jpg"))).getBinaryStream().readAllBytes()).substring(0,1000));
-
-        } catch (SQLException | IOException e) {
-            throw new RuntimeException("File could not be read", e);
-        }
-
     }
 
 }

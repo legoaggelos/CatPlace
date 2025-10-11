@@ -74,14 +74,6 @@ public class CatPlaceController {
     @PostMapping
     private ResponseEntity<Void> createCat(@RequestBody Cat newCatRequest, UriComponentsBuilder ucb, Principal principal, OutputStream outputStream){
         SerialBlob profilePicture = newCatRequest.profilePicture();
-        System.out.println("12345");
-        System.out.println(newCatRequest.name());
-        System.out.println(newCatRequest.profilePicture()==null);
-        try {
-            System.out.println(profilePicture.length());
-        } catch (Exception e) {
-
-        }
         try {
             if (profilePicture == null) {
                 profilePicture = new SerialBlob(Files.readAllBytes(Path.of("4.jpg")));
@@ -90,9 +82,6 @@ public class CatPlaceController {
             System.out.println("Error: couldn't read default profile picture. This is a major bug."); //TODO proper logging
         }
         Cat catWithOwner = new Cat(null, newCatRequest.name(), newCatRequest.ageInMonths(), principal.getName(), profilePicture);
-        System.out.println(catWithOwner.name());
-        System.out.println(catWithOwner.owner());
-        System.out.println(catWithOwner.ageInMonths());
         Cat savedCat = repository.save(catWithOwner);
         URI locationOfNewCat = ucb
                 .path("/cats/{id}")
