@@ -1,0 +1,9 @@
+{
+  "id": 1,
+  "name": "psilos",
+  "dateOfBirth": "2025-04-08T02:30:30Z",
+  "owner": "paul",
+  "profilePicture": null,
+  "bio": "tall cat",
+  "isAlive": true
+}

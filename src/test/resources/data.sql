@@ -1,4 +1,6 @@
-INSERT INTO CAT(ID, NAME, DATE_OF_BIRTH, OWNER, BIO, IS_ALIVE) VALUES (5, 'psilos', NULL, 'legoaggelos', 'tall cat', true);
-INSERT INTO CAT(ID, NAME, DATE_OF_BIRTH, OWNER, BIO, IS_ALIVE) VALUES (6, 'kontos', NULL, 'legoaggelos', 'short', true);
-INSERT INTO CAT(ID, NAME, DATE_OF_BIRTH, OWNER, BIO, IS_ALIVE) VALUES (3, 'mesos', NULL, 'legoaggelos', 'average', true);
+INSERT INTO CAT(ID, NAME, DATE_OF_BIRTH, OWNER, BIO, IS_ALIVE) VALUES (5, 'psilos', NULL, 'paul', 'tall cat', true);
+INSERT INTO CAT(ID, NAME, DATE_OF_BIRTH, OWNER, BIO, IS_ALIVE) VALUES (6, 'kontos', NULL, 'paul', 'short', true);
+INSERT INTO CAT(ID, NAME, DATE_OF_BIRTH, OWNER, BIO, IS_ALIVE) VALUES (3, 'mesos', NULL, 'paul', 'average', true);
 INSERT INTO CAT(ID, NAME, DATE_OF_BIRTH, OWNER, BIO, IS_ALIVE) VALUES (4, 'arabas', NULL, 'kat', 'arabian', true);
+
+INSERT INTO CAT_PLACE_USER(DISPLAY_NAME, USERNAME, BIO, PROFILE_PICTURE, EMAIL, IS_ADMIN) VALUES ('Katherine','kat', '', NULL, null, FALSE)
