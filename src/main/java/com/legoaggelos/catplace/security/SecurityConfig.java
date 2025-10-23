@@ -27,19 +27,19 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(request -> {
                             request
-                                    .requestMatchers(HttpMethod.GET, "/cats/**", "/users/**")
+                                    .requestMatchers(HttpMethod.GET, "/cats/**", "/users/**", "/catposts/**", "/catposts/fromCatId/**", "/catposts/fromOwnerId/**", "/cats/fromOwner/**")
                                     .permitAll();
                             request
                                     .requestMatchers(HttpMethod.POST, "/users", "users/**")
                                     .permitAll();
                             request.
-                                    requestMatchers(HttpMethod.POST, "/cats/**")
+                                    requestMatchers(HttpMethod.POST, "/cats/**", "/catposts/**")
                                     .hasRole("USER");
                             request.
-                                    requestMatchers(HttpMethod.DELETE, "/cats/**", "/users/**")
+                                    requestMatchers(HttpMethod.DELETE, "/cats/**", "/users/**", "/catposts/**", "/catposts/fromCatId/**", "/catposts/fromOwnerId/**", "/cats/fromOwner/**")
                                     .hasRole("USER");
                             request.
-                                    requestMatchers(HttpMethod.PUT, "/cats/**", "/users/**")
+                                    requestMatchers(HttpMethod.PUT, "/cats/**", "/users/**", "/catposts/**")
                                     .hasRole("USER");
                         }
                 )

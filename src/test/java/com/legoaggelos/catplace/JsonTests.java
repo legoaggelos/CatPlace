@@ -1,18 +1,27 @@
 package com.legoaggelos.catplace;
 
 import static com.legoaggelos.catplace.CatApplicationTests.sampleDate;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.SQLException;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 import com.legoaggelos.catplace.cats.Cat;
+import com.legoaggelos.catplace.cats.posts.Post;
 import com.legoaggelos.catplace.security.users.CatPlaceUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.json.JacksonTester;
+
+import javax.sql.rowset.serial.SerialBlob;
 
 @JsonTest
 public class JsonTests {
@@ -21,9 +30,18 @@ public class JsonTests {
 
 	@Autowired
 	private JacksonTester<CatPlaceUser> jsonUser;
+
+	@Autowired
+	private JacksonTester<Post> jsonPost;
 	private Cat[] cats;
 	private CatPlaceUser[] users;
-	@BeforeEach
+	private Post[] posts;
+	private OffsetDateTime sampleDate = OffsetDateTime.of(2025,4, 8, 2, 30, 30, 0, ZoneOffset.ofHours(3));
+
+    public JsonTests() throws IOException, SQLException {
+    }
+
+    @BeforeEach
 	void setUp() {
 		cats= new Cat[]{
 			new Cat(1L,"psilos", sampleDate, "paul", null, "tall cat", true),
@@ -36,8 +54,42 @@ public class JsonTests {
 				new CatPlaceUser("paul", "paul", null, "Owner of cats", "example@gmail.com"),
 				new CatPlaceUser("Katherine", "kat", null, "", null)
 		};
+		posts = new Post[] {
+			new Post(5L, null, 0L, 5L, "paul", "Cute cat!!",sampleDate, true),
+			new Post(2L, null, 0L, 5L, "paul", "Cuter cat!!",sampleDate.minusDays(1), false)
+		};
 	}
-	
+	@Test
+	void singlePostSerializationTest() throws IOException {
+		var json = jsonPost.write(posts[0]);
+		assertThat(json).isStrictlyEqualToJson("single_post.json");
+
+		assertThat(json).hasJsonPathNumberValue("@.id");
+		assertThat(json).extractingJsonPathNumberValue("@.id")
+				.isEqualTo(5);
+		assertThat(json).hasJsonPathNumberValue("@.likeCount");
+		assertThat(json).extractingJsonPathNumberValue("@.likeCount")
+				.isEqualTo(0);
+		assertThat(json).hasJsonPathNumberValue("@.catOwner");
+		assertThat(json).extractingJsonPathNumberValue("@.catOwner")
+				.isEqualTo(5);
+
+		assertThat(json).hasJsonPathStringValue("@.userOwner");
+		assertThat(json).extractingJsonPathStringValue("@.userOwner")
+				.isEqualTo("paul");
+
+		assertThat(json).hasJsonPathStringValue("@.desc");
+		assertThat(json).extractingJsonPathStringValue("@.desc")
+				.isEqualTo("Cute cat!!");
+
+		assertThat(json).hasJsonPathStringValue("@.uploadDate");
+		assertThat(json).extractingJsonPathStringValue("@.uploadDate")
+				.isEqualTo("2025-04-08T02:30:30+03:00");
+
+		assertThat(json).hasJsonPathBooleanValue("@.isApproved");
+		assertThat(json).extractingJsonPathBooleanValue("@.isApproved")
+				.isEqualTo(true);
+	}
 	@Test
 	void singleCatSerializationTest() throws IOException {
 		assertThat(json.write(cats[0])).isStrictlyEqualToJson("single_cat.json");
@@ -53,7 +105,7 @@ public class JsonTests {
                 .isEqualTo("paul");
         assertThat(json.write(cats[0])).hasJsonPathStringValue("@.dateOfBirth");
         assertThat(json.write(cats[0])).extractingJsonPathStringValue("@.dateOfBirth")
-        .isEqualTo("2025-04-08T02:30:30Z");
+        .isEqualTo("2025-04-08T02:30:30+03:00");
 	}
 
 	@Test
@@ -113,12 +165,37 @@ public class JsonTests {
 	}
 
 	@Test
+	void singlePostDeserializationTest() throws IOException {
+		String jsonString = """
+				{
+				  "id": 5,
+				  "image": null,
+				  "likeCount": 0,
+				  "catOwner": 5,
+				  "userOwner": "paul",
+				  "desc": "Cute cat!!",
+				  "uploadDate": "2025-04-08T02:30:30+03:00",
+				   "isApproved": true
+				}
+				""";
+		var parsed = jsonPost.parseObject(jsonString);
+		assertThat(parsed.id()).isEqualTo(5);
+		assertThat(parsed.catOwner()).isEqualTo(5);
+		assertThat(parsed.desc()).isEqualTo("Cute cat!!");
+		assertThat(parsed.image()).isEqualTo(null);
+		assertThat(parsed.isApproved()).isEqualTo(true);
+		assertThat(parsed.likeCount()).isEqualTo(0);
+		assertThat(parsed.uploadDate()).isEqualTo("2025-04-08T02:30:30+03:00");
+		assertThat(parsed.userOwner()).isEqualTo("paul");
+	}
+
+	@Test
 	void singleCatDeserializationTest() throws IOException {
 		String jsonString = """
 					{
 						"id": 1,
 				    	"name": "psilos",
-				    	"dateOfBirth": "2025-04-08T02:30:30Z",
+				    	"dateOfBirth": "2025-04-08T02:30:30+03:00",
 				    	"owner": "paul",
 				    	"profilePicture": null,
 				    	"bio": "tall cat",

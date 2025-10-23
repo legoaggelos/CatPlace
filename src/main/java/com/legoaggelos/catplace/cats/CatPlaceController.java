@@ -41,6 +41,16 @@ public class CatPlaceController {
         this.repository = repository;
     }
 
+    @DeleteMapping("/fromOwner/{requestedOwner}")
+    ResponseEntity<Void> deleteByUser(@PathVariable String requestedOwner, Authentication authentication) {
+        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        if (admin || requestedOwner.equals(authentication.getName())) {
+            repository.deleteAllByOwner(requestedOwner);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
     @GetMapping
     ResponseEntity<List<Cat>> findAll(Pageable pageable, Principal principal) {
         Page<Cat> page = repository.findByOwner(principal.getName(),
@@ -49,7 +59,24 @@ public class CatPlaceController {
                         pageable.getPageSize(),
                         pageable.getSortOr(Sort.by(Sort.Direction.ASC, "name"))
                 ));
-        return ResponseEntity.ok(page.getContent());
+        if (!page.isEmpty()) {
+            return ResponseEntity.ok(page.getContent());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/fromOwner/{requestedId}")
+    ResponseEntity<List<Cat>> findAllByOwner(Pageable pageable, @PathVariable String requestedId) {
+        Page<Cat> page = repository.findByOwner(requestedId,
+                PageRequest.of(
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        pageable.getSortOr(Sort.by(Sort.Direction.ASC, "name"))
+                ));
+        if (!page.isEmpty()) {
+            return ResponseEntity.ok(page.getContent());
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/{requestedId}")
@@ -144,7 +171,7 @@ public class CatPlaceController {
     @DeleteMapping("/{id}")
     private ResponseEntity<Void> deleteCat(@PathVariable Long id, Authentication authentication) {
         boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
-        if (repository.existsByIdAndOwner(id, authentication.getName()) || admin) {
+        if (repository.existsByIdAndOwner(id, authentication.getName()) || (admin && repository.existsById(id))) {
             repository.deleteById(id);
             return ResponseEntity.noContent().build();
         }

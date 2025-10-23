@@ -14,10 +14,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 
+import javax.sql.rowset.serial.SerialBlob;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -31,6 +33,47 @@ public class CatPlaceUserApplicationTests {
 
     private static final Path testFile = Paths.get("4.jpg");
 
+    @Test
+    @DirtiesContext
+    void shouldCreateNewUserWithNewPfp() throws IOException, SQLException {
+        var testPfp = new SerialBlob(Files.readAllBytes(testFile));
+        testPfp.truncate(500);
+        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", testPfp, "example bio", "examplemail@gmail.com", new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), false);
+        ResponseEntity<Void> createResponse = restTemplate
+                .withBasicAuth("kat", "xyz789")
+                .postForEntity("/users", newCatPlaceUserRequest, Void.class);
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+
+        ResponseEntity<String> response = restTemplate
+                .withBasicAuth("kat", "xyz789")
+                .getForEntity("/users/exampleusername", String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+        String username = documentContext.read("$.username");
+        assertThat(username).isEqualTo("exampleusername");
+
+        String displayName = documentContext.read("$.displayName");
+        assertThat(displayName).isEqualTo("examplename");
+
+        byte[] profilePicture = Base64.getDecoder().decode((String) documentContext.read("$.profilePicture"));
+        assertThat(profilePicture).isEqualTo(testPfp.getBinaryStream().readAllBytes());
+
+        String bio = documentContext.read("$.bio");
+        assertThat(bio).isEqualTo("example bio");
+
+        String email = documentContext.read("$.email");
+        assertThat(email).isEqualTo("examplemail@gmail.com");
+
+        boolean isAdmin = documentContext.read("$.admin");
+        assertThat(isAdmin).isFalse();
+
+        List<List<Long>> likedLists = List.of(documentContext.read("$.likedPosts"), documentContext.read("$.likedComments"), documentContext.read("$.likedReplies"));
+        for (List<Long> likedList : likedLists) {
+            assertThat(likedList).isEmpty();
+        }
+    }
     @Test
     public void canFindUser() {
         ResponseEntity<String> response = restTemplate

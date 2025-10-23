@@ -40,7 +40,7 @@ class CatApplicationTests {
 
     @Test
     void shouldReturnACatWhenDataIsSaved() throws IOException {
-        shouldCreateANewCat();
+        shouldCreateANewCatAndHaveDefaultPfp();
         ResponseEntity<String> response = restTemplate
                 .withBasicAuth("paul", "abc123")
                 .getForEntity("/cats/1", String.class);
@@ -207,7 +207,38 @@ class CatApplicationTests {
     }
     @Test
     @DirtiesContext
-    void shouldCreateANewCat() throws IOException {
+    void shouldCreateANewCatAndHaveNewPfp() throws IOException, SQLException {
+        var testPfp = new SerialBlob(Files.readAllBytes(testFile));
+        testPfp.truncate(500);
+        Cat newCat = new Cat(null, "pekos", sampleDate, null, testPfp, "random", true);
+        ResponseEntity<Void> createResponse = restTemplate
+                .withBasicAuth("paul", "abc123")
+                .postForEntity("/cats", newCat, Void.class);
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        URI locationOfNewCat = createResponse.getHeaders().getLocation();
+        ResponseEntity<String> getResponse = restTemplate
+                .withBasicAuth("paul", "abc123")
+                .getForEntity(locationOfNewCat, String.class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        DocumentContext documentContext = JsonPath.parse(getResponse.getBody());
+        Number id = documentContext.read("$.id");
+        OffsetDateTime dateOfBirth = OffsetDateTime.parse(documentContext.read("$.dateOfBirth"));
+        String name = documentContext.read("$.name");
+        String bio = documentContext.read("$.bio");
+        byte[] pfp = Base64.getDecoder().decode((String) documentContext.read("$.profilePicture"));
+
+        assertThat(pfp).isEqualTo(testPfp.getBinaryStream().readAllBytes());
+        assertThat(bio).isEqualTo("random");
+        assertThat(id).isNotNull();
+        assertThat(dateOfBirth).isEqualTo(sampleDate);
+        assertThat(name).isEqualTo("pekos");
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldCreateANewCatAndHaveDefaultPfp() throws IOException {
         Cat newCat = new Cat(null, "pekos", sampleDate, null, null, "random", true);
         ResponseEntity<Void> createResponse = restTemplate
                 .withBasicAuth("paul", "abc123")
@@ -288,7 +319,7 @@ class CatApplicationTests {
     @Test
     @DirtiesContext
     void shouldUpdateAnExistingCat() throws IOException, SQLException {
-        shouldCreateANewCat();
+        shouldCreateANewCatAndHaveDefaultPfp();
         SerialBlob samplePfp = new SerialBlob(Files.readAllBytes(Paths.get("img.png")));
         OffsetDateTime newDate = sampleDate.minusHours(2);
     	Cat catUpdate = new Cat(null, "mesos v2", newDate,null, samplePfp, "average v2", true);
@@ -352,7 +383,7 @@ class CatApplicationTests {
     @Test
     @DirtiesContext
     void shouldUpdateAnExistingCatWholeyWhenAdmin() throws IOException, SQLException {
-        shouldCreateANewCat();
+        shouldCreateANewCatAndHaveDefaultPfp();
         SerialBlob samplePfp = new SerialBlob(Files.readAllBytes(Paths.get("img.png")));
         OffsetDateTime newDate = sampleDate.minusYears(35);
         Cat catUpdate = new Cat(null, "mesos v2", newDate,null, samplePfp, "average v2", true);
@@ -362,7 +393,7 @@ class CatApplicationTests {
 
         ResponseEntity<String> responsePage = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
-                .getForEntity("/cats", String.class);
+                .getForEntity("/cats/fromOwner/paul", String.class);
         assertThat(responsePage.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         DocumentContext documentContextPage = JsonPath.parse(responsePage.getBody());
@@ -571,6 +602,22 @@ class CatApplicationTests {
     }
 
     @Test
+    void shouldNotDeleteCatsFromOwnerThatDoesNotExist() {
+        ResponseEntity<Void> deleteResponse = restTemplate
+                .withBasicAuth("paul", "abc123")
+                .exchange("/cats/fromOwner/safafgyhasfhjashf", HttpMethod.DELETE, null, Void.class);
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void shouldNotGetCatsFromOwnerThatDoesNotExist() {
+        ResponseEntity<Void> getResponse = restTemplate
+                .withBasicAuth("paul", "abc123")
+                .exchange("/cats/fromOwner/safafgyhasfhjashf", HttpMethod.GET, null, Void.class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
     void shouldNotDeleteACatWhenNotAuthenticated() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .exchange("/cats/4", HttpMethod.DELETE, null, Void.class);
@@ -606,5 +653,97 @@ class CatApplicationTests {
                 .withBasicAuth("kat", "xyz789")
                 .getForEntity("/cats/4", String.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldDeleteAllUsersCats() {
+        ResponseEntity<Void> response = restTemplate
+                .withBasicAuth("paul", "abc123")
+                .exchange("/cats/fromOwner/paul", HttpMethod.DELETE, null, Void.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        ResponseEntity<String> getResponse = restTemplate
+                .withBasicAuth("paul", "abc123")
+                .getForEntity("/cats", String.class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldDeleteAllUsersCatsIfAdmin() {
+        ResponseEntity<Void> response = restTemplate
+                .withBasicAuth("legoaggelos", "admin")
+                .exchange("/cats/fromOwner/paul", HttpMethod.DELETE, null, Void.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        ResponseEntity<String> getResponse = restTemplate
+                .withBasicAuth("paul", "abc123")
+                .getForEntity("/cats", String.class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldNotDeleteAllUsersCatsIfNotAdmin() {
+        ResponseEntity<Void> response = restTemplate
+                .withBasicAuth("kat", "xyz789")
+                .exchange("/cats/fromOwner/paul", HttpMethod.DELETE, null, Void.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        ResponseEntity<String> getResponse = restTemplate
+                .withBasicAuth("paul", "abc123")
+                .getForEntity("/cats", String.class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void shouldReturnAllCatsFromCertainUserWhenListIsRequested() {
+        ResponseEntity<String> response = restTemplate
+                .withBasicAuth("paul", "abc123")
+                .getForEntity("/cats/fromOwner/paul", String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+        int catCount = documentContext.read("$.length()");
+        assertThat(catCount).isEqualTo(3);
+
+        JSONArray ids = documentContext.read("$..id");
+        assertThat(ids).containsExactlyInAnyOrder(5,6,3);
+
+        JSONArray names = documentContext.read("$..name");
+        assertThat(names).containsExactlyInAnyOrder("psilos","kontos","mesos");
+
+        JSONArray dateOfBirth = documentContext.read("$..dateOfBirth");
+        assertThat(dateOfBirth).containsExactlyInAnyOrder(null, null, null);
+
+        JSONArray x = documentContext.read("$..profilePicture");
+        assertThat(x).isNotNull();
+        //assertThat(x).containsExactlyInAnyOrder(Files.readAllBytes(testFile)); excluded because it needs to be created via code for the default to work, not the default data
+    }
+
+    @Test
+    void shouldReturnAllCatsFromCertainUserWhenListIsRequestedAndTheyAreAnotherUser() {
+        ResponseEntity<String> response = restTemplate
+                .withBasicAuth("kat", "xyz789")
+                .getForEntity("/cats/fromOwner/paul", String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+        int catCount = documentContext.read("$.length()");
+        assertThat(catCount).isEqualTo(3);
+
+        JSONArray ids = documentContext.read("$..id");
+        assertThat(ids).containsExactlyInAnyOrder(5,6,3);
+
+        JSONArray names = documentContext.read("$..name");
+        assertThat(names).containsExactlyInAnyOrder("psilos","kontos","mesos");
+
+        JSONArray dateOfBirth = documentContext.read("$..dateOfBirth");
+        assertThat(dateOfBirth).containsExactlyInAnyOrder(null, null, null);
+
+        JSONArray x = documentContext.read("$..profilePicture");
+        assertThat(x).isNotNull();
+        //assertThat(x).containsExactlyInAnyOrder(Files.readAllBytes(testFile)); excluded because it needs to be created via code for the default to work, not the default data
     }
 }

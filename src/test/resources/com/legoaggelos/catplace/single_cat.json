@@ -1,7 +1,7 @@
 {
   "id": 1,
   "name": "psilos",
-  "dateOfBirth": "2025-04-08T02:30:30Z",
+  "dateOfBirth": "2025-04-08T02:30:30+03:00",
   "owner": "paul",
   "profilePicture": null,
   "bio": "tall cat",

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.legoaggelos.catplace.security.deserializers.SerialBlobDeserializer;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.annotation.Transient;
@@ -49,7 +51,7 @@ public class CatPlaceUser implements Persistable<String> {
         this.isNew=isNew;
     }
     @JsonCreator
-    public CatPlaceUser(String displayName, String username, SerialBlob profilePicture, String bio, String email, List<Long> likedPosts, List<Long> likedComments, List<Long> likedReplies, boolean isAdmin) {
+    public CatPlaceUser(String displayName, String username, @JsonDeserialize(using = SerialBlobDeserializer.class) SerialBlob profilePicture, String bio, String email, List<Long> likedPosts, List<Long> likedComments, List<Long> likedReplies, boolean isAdmin) {
         this.username = username;
         this.displayName = displayName;
         this.profilePicture = profilePicture;

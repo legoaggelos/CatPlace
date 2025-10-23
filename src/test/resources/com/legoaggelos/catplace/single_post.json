@@ -1,0 +1,10 @@
+{
+  "id": 5,
+  "image": null,
+  "likeCount": 0,
+  "catOwner": 5,
+  "userOwner": "paul",
+  "desc": "Cute cat!!",
+  "uploadDate": "2025-04-08T02:30:30+03:00",
+   "isApproved": true
+}
