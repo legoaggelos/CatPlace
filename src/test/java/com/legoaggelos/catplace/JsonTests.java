@@ -18,12 +18,14 @@ import com.legoaggelos.catplace.security.users.CatPlaceUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.json.JacksonTester;
 
 import javax.sql.rowset.serial.SerialBlob;
 
 @JsonTest
+@AutoConfigureTestDatabase
 public class JsonTests {
 	@Autowired
     private JacksonTester<Cat> json;

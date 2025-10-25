@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import com.legoaggelos.catplace.cats.Cat;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
@@ -30,6 +31,7 @@ import javax.sql.rowset.serial.SerialBlob;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestDatabase
 class CatApplicationTests {
 	@Autowired
     TestRestTemplate restTemplate;

@@ -1,9 +1,14 @@
 package com.legoaggelos.catplace.security;
 
 import com.legoaggelos.catplace.security.users.CatPlaceUser;
+import org.h2.jdbcx.JdbcDataSource;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -87,5 +92,7 @@ public class SecurityConfig {
         jdbc.createUser(admin);
         return jdbc;
     }
+
+
 
 }
