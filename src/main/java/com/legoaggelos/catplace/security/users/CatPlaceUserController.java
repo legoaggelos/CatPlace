@@ -75,7 +75,7 @@ public class CatPlaceUserController {
         } else if ((!admin && !authentication.getName().equals(catPlaceUser.get().getUsername()))) {
             return ResponseEntity.notFound().build();
         }
-        CatPlaceUser newCatPlaceUser = new CatPlaceUser(newCatPlaceUserRequest.getDisplayName(), requestedUsername, newCatPlaceUserRequest.getProfilePicture(), newCatPlaceUserRequest.getBio(), newCatPlaceUserRequest.getEmail(), newCatPlaceUserRequest.getLikedPosts(), newCatPlaceUserRequest.getLikedComments(), newCatPlaceUserRequest.getLikedReplies(), newCatPlaceUserRequest.isAdmin() && admin, false);
+        CatPlaceUser newCatPlaceUser = new CatPlaceUser(newCatPlaceUserRequest.getDisplayName(), requestedUsername, newCatPlaceUserRequest.getProfilePicture(), (admin) ? catPlaceUser.get().getBio()/*should not let admin update bio*/ : newCatPlaceUserRequest.getBio(), newCatPlaceUserRequest.getEmail(), newCatPlaceUserRequest.getLikedPosts(), newCatPlaceUserRequest.getLikedComments(), newCatPlaceUserRequest.getLikedReplies(), newCatPlaceUserRequest.isAdmin() && admin, false);
         catPlaceUserRepository.save(newCatPlaceUser);
         return ResponseEntity.noContent().build();
     }

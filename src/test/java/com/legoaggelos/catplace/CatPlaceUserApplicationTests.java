@@ -21,6 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -34,6 +36,8 @@ public class CatPlaceUserApplicationTests {
     TestRestTemplate restTemplate;
 
     private static final Path testFile = Paths.get("4.jpg");
+
+    protected static final OffsetDateTime sampleDate = OffsetDateTime.of(2025,4, 8, 2, 30, 30, 0, ZoneOffset.ofHours(0));
 
     @Test
     @DirtiesContext
@@ -344,7 +348,7 @@ public class CatPlaceUserApplicationTests {
         assertThat(displayName).isEqualTo("paul 2");
 
         String bio = documentContext.read("$.bio");
-        assertThat(bio).isEqualTo("Owner of cats 2");
+        assertThat(bio).isEqualTo("Owner of cats");
 
         String email= documentContext.read("$.email");
         assertThat(email).isEqualTo("example@gmail.com 2");

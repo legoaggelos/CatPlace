@@ -1,19 +1,16 @@
 package com.legoaggelos.catplace.cats.posts;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.security.Principal;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -133,7 +130,7 @@ public class PostController {
                 newPostRequest.catOwner(),
                 username,
                 newPostRequest.desc(),
-                Instant.now().atOffset(newPostRequest.uploadDate().getOffset()),
+                Instant.now().atOffset(ZoneOffset.UTC),
                 admin && newPostRequest.isApproved() ? true : null); //if the user isnt an admin, false, otherwise, their choice
         Post savedPost = repository.save(request);
         URI locationOfNewPost = ucb
@@ -172,7 +169,7 @@ public class PostController {
     @DeleteMapping("/fromOwnerId/{requestedId}")
     private ResponseEntity<Void> deletePostsFromUserOwner(@PathVariable String requestedId, Authentication authentication) {
         boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
-        if (admin && repository.existsByUserOwner(requestedId)|| requestedId.equals(authentication.getName())) {
+        if (admin && repository.existsByUserOwner(requestedId) || requestedId.equals(authentication.getName())) {
             Long amountDeleted = repository.deleteAllByUserOwner(requestedId);
             if (amountDeleted.equals(0)) {
                 return ResponseEntity.notFound().build();
@@ -194,14 +191,14 @@ public class PostController {
         boolean owns = repository.existsByIdAndUserOwner(requestedId, authentication.getName());
         Post post = postOptional.get();
         Post update = new Post(requestedId,
-                    post.image(), //no one can update image. If an admin doesnt like it, they can delete it.
-                    (admin || (!owns && Math.abs(postUpdate.likeCount()-post.likeCount())<=1 && postUpdate.likeCount()>=0)) ? postUpdate.likeCount() : post.likeCount(), //only admin and not-owner can update like count
-                    post.catOwner(),
-                    post.userOwner(),
-                    (admin || owns) ? postUpdate.desc() : post.desc(),
-                    admin ? postUpdate.uploadDate() : post.uploadDate(), //admin can fix the upload date if it is wrong because of my potentially crappy code
-                    admin ? postUpdate.isApproved() : post.isApproved()
-                );
+                post.image(), //no one can update image. If an admin doesnt like it, they can delete it.
+                (admin || (!owns && Math.abs(postUpdate.likeCount() - post.likeCount()) <= 1 && postUpdate.likeCount() >= 0)) ? postUpdate.likeCount() : post.likeCount(), //only admin and not-owner can update like count
+                post.catOwner(),
+                post.userOwner(),
+                (owns) ? postUpdate.desc() : post.desc(), //admin shouldnt update post desc
+                (admin ? postUpdate.uploadDate() : post.uploadDate()).withOffsetSameInstant(ZoneOffset.UTC), //admin can fix the upload date if it is wrong because of my potentially crappy code
+                admin ? postUpdate.isApproved() : post.isApproved()
+        );
         repository.save(update);
         return ResponseEntity.noContent().build();
     }

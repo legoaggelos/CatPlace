@@ -840,7 +840,7 @@ public class CatPostApplicationTests {
         assertThat(userOwner).isEqualTo("paul");
 
         String desc = documentContext.read("$.desc");
-        assertThat(desc).isEqualTo("Ugly cat");
+        assertThat(desc).isEqualTo("Cute cat!!");
 
         String uploadDate = documentContext.read("$.uploadDate");
         assertThat(Instant.now().getEpochSecond()-OffsetDateTime.parse(uploadDate).toEpochSecond()).isLessThan(60);

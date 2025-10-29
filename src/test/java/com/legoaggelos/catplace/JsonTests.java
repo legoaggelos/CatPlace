@@ -14,6 +14,7 @@ import java.util.ArrayList;
 
 import com.legoaggelos.catplace.cats.Cat;
 import com.legoaggelos.catplace.cats.posts.Post;
+import com.legoaggelos.catplace.cats.posts.comments.Comment;
 import com.legoaggelos.catplace.security.users.CatPlaceUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,10 +35,14 @@ public class JsonTests {
 	private JacksonTester<CatPlaceUser> jsonUser;
 
 	@Autowired
+	private JacksonTester<Comment> jsonComment;
+
+	@Autowired
 	private JacksonTester<Post> jsonPost;
 	private Cat[] cats;
 	private CatPlaceUser[] users;
 	private Post[] posts;
+	private Comment[] comments;
 	private OffsetDateTime sampleDate = OffsetDateTime.of(2025,4, 8, 2, 30, 30, 0, ZoneOffset.ofHours(3));
 
     public JsonTests() throws IOException, SQLException {
@@ -59,6 +64,9 @@ public class JsonTests {
 		posts = new Post[] {
 			new Post(5L, null, 0L, 5L, "paul", "Cute cat!!",sampleDate, true),
 			new Post(2L, null, 0L, 5L, "paul", "Cuter cat!!",sampleDate.minusDays(1), false)
+		};
+		comments = new Comment[] {
+				new Comment(48L, "ragebait fr", 0L, 4L, "kat", "kat", 4L, OffsetDateTime.parse("2025-04-08T02:45:45Z"), 3L)
 		};
 	}
 	@Test
@@ -139,6 +147,36 @@ public class JsonTests {
 	}
 
 	@Test
+	void singleCommentSerializationTest() throws IOException {
+		var writtenComment = jsonComment.write(comments[0]);
+		assertThat(writtenComment).isStrictlyEqualToJson("single_comment.json");
+		assertThat(writtenComment).hasJsonPathNumberValue("@.id");
+		assertThat(writtenComment).extractingJsonPathNumberValue("@.id")
+				.isEqualTo(48);
+		assertThat(writtenComment).hasJsonPathNumberValue("@.postId");
+		assertThat(writtenComment).extractingJsonPathNumberValue("@.postId")
+				.isEqualTo(4);
+		assertThat(writtenComment).hasJsonPathNumberValue("@.postCatPoster");
+		assertThat(writtenComment).extractingJsonPathNumberValue("@.postCatPoster")
+				.isEqualTo(4);
+		assertThat(writtenComment).hasJsonPathNumberValue("@.replyingTo");
+		assertThat(writtenComment).extractingJsonPathNumberValue("@.replyingTo")
+				.isEqualTo(3);
+		assertThat(writtenComment).hasJsonPathStringValue("@.content");
+		assertThat(writtenComment).extractingJsonPathStringValue("@.content")
+				.isEqualTo("ragebait fr");
+		assertThat(writtenComment).hasJsonPathStringValue("@.poster");
+		assertThat(writtenComment).extractingJsonPathStringValue("@.poster")
+				.isEqualTo("kat");
+		assertThat(writtenComment).hasJsonPathStringValue("@.postPoster");
+		assertThat(writtenComment).extractingJsonPathStringValue("@.postPoster")
+				.isEqualTo("kat");
+		assertThat(writtenComment).hasJsonPathStringValue("@.postTime");
+		assertThat(writtenComment).extractingJsonPathStringValue("@.postTime")
+				.isEqualTo("2025-04-08T02:45:45Z");
+	}
+
+	@Test
 	void singleUserDeserializationTest() throws IOException {
 		String jsonString = """
 					{
@@ -209,5 +247,33 @@ public class JsonTests {
 		assertThat(json.parseObject(jsonString).name()).isEqualTo("psilos");
 		assertThat(json.parseObject(jsonString).dateOfBirth()).isEqualTo(sampleDate.toString());
 		assertThat(json.parseObject(jsonString).owner()).isEqualTo("paul");
+	}
+
+	@Test
+	void singleCommentDeserializationTest() throws IOException {
+		String jsonString = """
+				{
+				"id": 48,
+				  "content": "ragebait fr",
+				  "postId": 4,
+				  "likeCount": 0,
+				  "poster": "kat",
+				  "postPoster": "kat",
+				  "postCatPoster": 4,
+				  "postTime": "2025-04-08T02:45:45Z",
+				  "replyingTo": 3
+				}
+				""";
+		assertThat(jsonComment.parse(jsonString)).isEqualTo(comments[0]);
+		var parsedObject = jsonComment.parseObject(jsonString);
+		assertThat(parsedObject.id()).isEqualTo(48);
+		assertThat(parsedObject.content()).isEqualTo("ragebait fr");
+		assertThat(parsedObject.postId()).isEqualTo(4);
+		assertThat(parsedObject.likeCount()).isEqualTo(0);
+		assertThat(parsedObject.poster()).isEqualTo("kat");
+		assertThat(parsedObject.postPoster()).isEqualTo("kat");
+		assertThat(parsedObject.postCatPoster()).isEqualTo(4);
+		assertThat(parsedObject.postTime()).isEqualTo(OffsetDateTime.parse("2025-04-08T02:45:45Z") );
+		assertThat(parsedObject.replyingTo()).isEqualTo(3);
 	}
 }

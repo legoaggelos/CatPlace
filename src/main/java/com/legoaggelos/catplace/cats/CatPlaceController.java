@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.security.Principal;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -118,7 +119,7 @@ public class CatPlaceController {
         }
         Cat catWithOwner = new Cat(null,
                 newCatRequest.name(),
-                newCatRequest.dateOfBirth(),
+                newCatRequest.dateOfBirth().withOffsetSameInstant(ZoneOffset.UTC),
                 authentication.getName(),
                 profilePicture,
                 newCatRequest.bio(),
@@ -159,7 +160,7 @@ public class CatPlaceController {
 
         Cat update = new Cat(requestedId,
                 catUpdate.name(),
-                dateOfBirth,
+                dateOfBirth.withOffsetSameInstant(ZoneOffset.UTC),
                 authentication.getName(),
                 catUpdate.profilePicture(),
                 catUpdate.bio(),

@@ -32,19 +32,22 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(request -> {
                             request
-                                    .requestMatchers(HttpMethod.GET, "/cats/**", "/users/**", "/catposts/**", "/catposts/fromCatId/**", "/catposts/fromOwnerId/**", "/cats/fromOwner/**")
+                                    .requestMatchers(HttpMethod.GET, "/cats/**", "/users/**", "/catposts/**", "/catposts/fromCatId/**", "/catposts/fromOwnerId/**", "/cats/fromOwner/**", "/comments/**", "/comments/fromPoster/**", "/comments/fromPostId/**", "/comments/getFromReplyingTo/**")
                                     .permitAll();
+                            request
+                                    .requestMatchers(HttpMethod.GET, "/comments/getFromCatPoster/**", "/comments/getFromPostUserPoster/**")
+                                    .hasRole("ADMIN"); //admin only testing methods
                             request
                                     .requestMatchers(HttpMethod.POST, "/users", "users/**")
                                     .permitAll();
                             request.
-                                    requestMatchers(HttpMethod.POST, "/cats/**", "/catposts/**")
+                                    requestMatchers(HttpMethod.POST, "/cats/**", "/catposts/**", "/comments/**")
                                     .hasRole("USER");
                             request.
-                                    requestMatchers(HttpMethod.DELETE, "/cats/**", "/users/**", "/catposts/**", "/catposts/fromCatId/**", "/catposts/fromOwnerId/**", "/cats/fromOwner/**")
+                                    requestMatchers(HttpMethod.DELETE, "/cats/**", "/users/**", "/catposts/**", "/catposts/fromCatId/**", "/catposts/fromOwnerId/**", "/cats/fromOwner/**", "/comments/**", "/comments/deleteByPoster/**", "/comments/deleteByParentComment/", "/comments/deleteByPostCatPoster/", "/comments/deleteByPostUserPoster/")
                                     .hasRole("USER");
                             request.
-                                    requestMatchers(HttpMethod.PUT, "/cats/**", "/users/**", "/catposts/**")
+                                    requestMatchers(HttpMethod.PUT, "/cats/**", "/users/**", "/catposts/**", "/comments/**")
                                     .hasRole("USER");
                         }
                 )
