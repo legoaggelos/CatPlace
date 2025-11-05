@@ -24,7 +24,7 @@ public interface CommentRepository extends CrudRepository<Comment, Long>, Paging
     Long deleteAllByPoster(@Param("poster")String poster);
 
     @Modifying
-    @Query("delete from COMMENT where POST_POSTER = :postPoster")
+    @Query("delete from COMMENT where POST_USER_POSTER = :postPoster")
     Long deleteAllByPostUserPoster(@Param("postPoster")String postPoster);
 
     @Modifying
@@ -35,13 +35,13 @@ public interface CommentRepository extends CrudRepository<Comment, Long>, Paging
     @Query("delete from COMMENT where REPLYING_TO = :replying")
     Long deleteAllByReplyingTo(@Param("replying")Long replying);
 
-    boolean existsByPostPosterAndPostCatPoster(String poster, Long postCatPoster);
+    boolean existsByPostUserPosterAndPostCatPoster(String poster, Long postCatPoster);
 
     Page<Comment> findByPostCatPoster(Long postCatPoster, Pageable pageable);
 
     Page<Comment> findByReplyingTo(Long replyingTo, Pageable pageable);
 
-    Page<Comment> findByPostPoster(String postPoster, Pageable pageable);
+    Page<Comment> findByPostUserPoster(String postPoster, Pageable pageable);
 
     ;
 }

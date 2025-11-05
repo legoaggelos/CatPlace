@@ -14,6 +14,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.jdbc.Sql;
 
 import javax.sql.rowset.serial.SerialBlob;
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class CatPlaceUserApplicationTests {
     void shouldCreateNewUserWithNewPfp() throws IOException, SQLException {
         var testPfp = new SerialBlob(Files.readAllBytes(testFile));
         testPfp.truncate(500);
-        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", testPfp, "example bio", "examplemail@gmail.com", new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), false);
+        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", testPfp, "example bio", "examplemail@gmail.com", false);
         ResponseEntity<Void> createResponse = restTemplate
                 .withBasicAuth("kat", "xyz789")
                 .postForEntity("/users", newCatPlaceUserRequest, Void.class);
@@ -75,10 +76,7 @@ public class CatPlaceUserApplicationTests {
         boolean isAdmin = documentContext.read("$.admin");
         assertThat(isAdmin).isFalse();
 
-        List<List<Long>> likedLists = List.of(documentContext.read("$.likedPosts"), documentContext.read("$.likedComments"), documentContext.read("$.likedReplies"));
-        for (List<Long> likedList : likedLists) {
-            assertThat(likedList).isEmpty();
-        }
+        
     }
     @Test
     public void canFindUser() {
@@ -100,10 +98,7 @@ public class CatPlaceUserApplicationTests {
         boolean isAdmin = documentContext.read("$.admin");
         assertThat(isAdmin).isFalse();
 
-        List<List<Long>> likedLists = List.of(documentContext.read("$.likedPosts"), documentContext.read("$.likedComments"), documentContext.read("$.likedReplies"));
-        for (List<Long> likedList : likedLists) {
-            assertThat(likedList).isEmpty();
-        }
+        
     }
 
     @Test
@@ -129,7 +124,7 @@ public class CatPlaceUserApplicationTests {
     @Test
     @DirtiesContext
     void shouldCreateNewUser() throws IOException {
-        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", null, "example bio", "examplemail@gmail.com", new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), false);
+        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", null, "example bio", "examplemail@gmail.com", false);
         ResponseEntity<Void> createResponse = restTemplate
                 .withBasicAuth("kat", "xyz789")
                 .postForEntity("/users", newCatPlaceUserRequest, Void.class);
@@ -160,15 +155,12 @@ public class CatPlaceUserApplicationTests {
         boolean isAdmin = documentContext.read("$.admin");
         assertThat(isAdmin).isFalse();
 
-        List<List<Long>> likedLists = List.of(documentContext.read("$.likedPosts"), documentContext.read("$.likedComments"), documentContext.read("$.likedReplies"));
-        for (List<Long> likedList : likedLists) {
-            assertThat(likedList).isEmpty();
-        }
+        
     }
     @Test
     @DirtiesContext
     void shouldCreateNewUserWhenUnauthenticated() {
-        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", null, "example bio", "examplemail@gmail.com", new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), false);
+        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", null, "example bio", "examplemail@gmail.com", false);
         ResponseEntity<Void> createResponse = restTemplate
                 .postForEntity("/users", newCatPlaceUserRequest, Void.class);
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -187,7 +179,7 @@ public class CatPlaceUserApplicationTests {
     @Test
     @DirtiesContext
     void shouldNotCreateDuplicateUser() {
-        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "kat", null, "example bio", "examplemail@gmail.com", new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), false);
+        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "kat", null, "example bio", "examplemail@gmail.com", false);
         ResponseEntity<Void> createResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
                 .postForEntity("/users", newCatPlaceUserRequest, Void.class);
@@ -197,6 +189,7 @@ public class CatPlaceUserApplicationTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql") // to not have liked connections mess with delete permissions
     void shouldDeleteUser() {
         ResponseEntity<Void> response = restTemplate
                 .withBasicAuth("kat", "xyz789")
@@ -227,6 +220,7 @@ public class CatPlaceUserApplicationTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql") // to not have liked connections mess with delete permissions
     void shouldDeleteOtherUserWhenAdmin() {
         ResponseEntity<Void> response = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -281,9 +275,6 @@ public class CatPlaceUserApplicationTests {
         String email= documentContext.read("$.email");
         assertThat(email).isEqualTo("example@gmail.com 2");
 
-        List<Long> likedPosts = documentContext.read("$.likedPosts");
-        assertThat(likedPosts).isEmpty();
-
         boolean isAdmin = documentContext.read("$.admin");
         assertThat(isAdmin).isFalse();
     }
@@ -317,9 +308,6 @@ public class CatPlaceUserApplicationTests {
         String email= documentContext.read("$.email");
         assertThat(email).isEqualTo("example@gmail.com");
 
-        List<Long> likedPosts = documentContext.read("$.likedPosts");
-        assertThat(likedPosts).isEmpty();
-
         boolean isAdmin = documentContext.read("$.admin");
         assertThat(isAdmin).isFalse();
     }
@@ -352,9 +340,6 @@ public class CatPlaceUserApplicationTests {
 
         String email= documentContext.read("$.email");
         assertThat(email).isEqualTo("example@gmail.com 2");
-
-        List<Long> likedPosts = documentContext.read("$.likedPosts");
-        assertThat(likedPosts).isEmpty();
 
         boolean isAdmin = documentContext.read("$.admin");
         assertThat(isAdmin).isFalse();

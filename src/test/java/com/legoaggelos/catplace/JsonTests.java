@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import com.legoaggelos.catplace.cats.Cat;
 import com.legoaggelos.catplace.cats.posts.Post;
 import com.legoaggelos.catplace.cats.posts.comments.Comment;
+import com.legoaggelos.catplace.likehandling.LikedComment;
+import com.legoaggelos.catplace.likehandling.LikedPost;
 import com.legoaggelos.catplace.security.users.CatPlaceUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,11 +40,19 @@ public class JsonTests {
 	private JacksonTester<Comment> jsonComment;
 
 	@Autowired
+	private JacksonTester<LikedComment> jsonLikedComment;
+
+	@Autowired
+	private JacksonTester<LikedPost> jsonLikedPost;
+
+	@Autowired
 	private JacksonTester<Post> jsonPost;
 	private Cat[] cats;
 	private CatPlaceUser[] users;
 	private Post[] posts;
 	private Comment[] comments;
+	private LikedComment likedComment;
+	private LikedPost likedPost;
 	private OffsetDateTime sampleDate = OffsetDateTime.of(2025,4, 8, 2, 30, 30, 0, ZoneOffset.ofHours(3));
 
     public JsonTests() throws IOException, SQLException {
@@ -57,7 +67,7 @@ public class JsonTests {
 			new Cat(4L, "arabas", sampleDate, "kat", null, "arabian", true)
 		};
 		users = new CatPlaceUser[]{
-				new CatPlaceUser("legoaggelos", "legoaggelos", null, "Owner of site", "legoangel2010@gmail.com", new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), true),
+				new CatPlaceUser("legoaggelos", "legoaggelos", null, "Owner of site", "legoangel2010@gmail.com", true),
 				new CatPlaceUser("paul", "paul", null, "Owner of cats", "example@gmail.com"),
 				new CatPlaceUser("Katherine", "kat", null, "", null)
 		};
@@ -68,6 +78,8 @@ public class JsonTests {
 		comments = new Comment[] {
 				new Comment(48L, "ragebait fr", 0L, 4L, "kat", "kat", 4L, OffsetDateTime.parse("2025-04-08T02:45:45Z"), 3L)
 		};
+		likedComment = new LikedComment(5L, "kat", 4L);
+		likedPost = new LikedPost(5L, "kat", 4L);
 	}
 	@Test
 	void singlePostSerializationTest() throws IOException {
@@ -135,15 +147,6 @@ public class JsonTests {
 		assertThat(jsonUser.write(users[1])).hasJsonPathStringValue("@.email");
 		assertThat(jsonUser.write(users[1])).extractingJsonPathStringValue("@.email")
 				.isEqualTo("example@gmail.com");
-		assertThat(jsonUser.write(users[1])).hasJsonPathArrayValue("@.likedPosts");
-		assertThat(jsonUser.write(users[1])).extractingJsonPathArrayValue("@.likedPosts")
-				.isEqualTo(new ArrayList<>());
-		assertThat(jsonUser.write(users[1])).hasJsonPathArrayValue("@.likedComments");
-		assertThat(jsonUser.write(users[1])).extractingJsonPathArrayValue("@.likedComments")
-				.isEqualTo(new ArrayList<>());
-		assertThat(jsonUser.write(users[1])).hasJsonPathArrayValue("@.likedReplies");
-		assertThat(jsonUser.write(users[1])).extractingJsonPathArrayValue("@.likedReplies")
-				.isEqualTo(new ArrayList<>());
 	}
 
 	@Test
@@ -168,12 +171,42 @@ public class JsonTests {
 		assertThat(writtenComment).hasJsonPathStringValue("@.poster");
 		assertThat(writtenComment).extractingJsonPathStringValue("@.poster")
 				.isEqualTo("kat");
-		assertThat(writtenComment).hasJsonPathStringValue("@.postPoster");
-		assertThat(writtenComment).extractingJsonPathStringValue("@.postPoster")
+		assertThat(writtenComment).hasJsonPathStringValue("@.postUserPoster");
+		assertThat(writtenComment).extractingJsonPathStringValue("@.postUserPoster")
 				.isEqualTo("kat");
 		assertThat(writtenComment).hasJsonPathStringValue("@.postTime");
 		assertThat(writtenComment).extractingJsonPathStringValue("@.postTime")
 				.isEqualTo("2025-04-08T02:45:45Z");
+	}
+
+	@Test
+	void singleLikedCommentSerializationTest() throws IOException {
+		var writtenLikedComment = jsonLikedComment.write(likedComment);
+		assertThat(writtenLikedComment).isStrictlyEqualToJson("single_liked_comment.json");
+		assertThat(writtenLikedComment).hasJsonPathStringValue("@.username");
+		assertThat(writtenLikedComment).extractingJsonPathStringValue("@.username")
+						.isEqualTo("kat");
+		assertThat(writtenLikedComment).hasJsonPathNumberValue("@.id");
+		assertThat(writtenLikedComment).extractingJsonPathNumberValue("@.id")
+				.isEqualTo(5);
+		assertThat(writtenLikedComment).hasJsonPathNumberValue("@.commentLikedId");
+		assertThat(writtenLikedComment).extractingJsonPathNumberValue("@.commentLikedId")
+				.isEqualTo(4);
+	}
+
+	@Test
+	void singleLikedPostSerializationTest() throws IOException {
+		var writtenLikedPost= jsonLikedPost.write(likedPost);
+		assertThat(writtenLikedPost).isStrictlyEqualToJson("single_liked_post.json");
+		assertThat(writtenLikedPost).hasJsonPathStringValue("@.username");
+		assertThat(writtenLikedPost).extractingJsonPathStringValue("@.username")
+				.isEqualTo("kat");
+		assertThat(writtenLikedPost).hasJsonPathNumberValue("@.id");
+		assertThat(writtenLikedPost).extractingJsonPathNumberValue("@.id")
+				.isEqualTo(5);
+		assertThat(writtenLikedPost).hasJsonPathNumberValue("@.postLikedId");
+		assertThat(writtenLikedPost).extractingJsonPathNumberValue("@.postLikedId")
+				.isEqualTo(4);
 	}
 
 	@Test
@@ -186,9 +219,6 @@ public class JsonTests {
 				    "profilePicture": null,
 				    "bio": "Owner of cats",
 				    "email": "example@gmail.com",
-				    "likedPosts": [],
-				    "likedComments": [],
-				    "likedReplies": [],
 				    "admin": false,
 				    "new": true
 					}
@@ -199,9 +229,6 @@ public class JsonTests {
 		assertThat(jsonUser.parseObject(jsonString).getBio()).isEqualTo("Owner of cats");
 		assertThat(jsonUser.parseObject(jsonString).getEmail()).isEqualTo("example@gmail.com");
 		assertThat(jsonUser.parseObject(jsonString).isAdmin()).isEqualTo(false);
-		assertThat(jsonUser.parseObject(jsonString).getLikedComments()).isEqualTo(new ArrayList<>());
-		assertThat(jsonUser.parseObject(jsonString).getLikedComments()).isEqualTo(new ArrayList<>());
-		assertThat(jsonUser.parseObject(jsonString).getLikedReplies()).isEqualTo(new ArrayList<>());
 	}
 
 	@Test
@@ -258,7 +285,7 @@ public class JsonTests {
 				  "postId": 4,
 				  "likeCount": 0,
 				  "poster": "kat",
-				  "postPoster": "kat",
+				  "postUserPoster": "kat",
 				  "postCatPoster": 4,
 				  "postTime": "2025-04-08T02:45:45Z",
 				  "replyingTo": 3
@@ -271,9 +298,43 @@ public class JsonTests {
 		assertThat(parsedObject.postId()).isEqualTo(4);
 		assertThat(parsedObject.likeCount()).isEqualTo(0);
 		assertThat(parsedObject.poster()).isEqualTo("kat");
-		assertThat(parsedObject.postPoster()).isEqualTo("kat");
+		assertThat(parsedObject.postUserPoster()).isEqualTo("kat");
 		assertThat(parsedObject.postCatPoster()).isEqualTo(4);
 		assertThat(parsedObject.postTime()).isEqualTo(OffsetDateTime.parse("2025-04-08T02:45:45Z") );
 		assertThat(parsedObject.replyingTo()).isEqualTo(3);
+	}
+
+	@Test
+	void singleLikedCommentDeserializationTest() throws IOException {
+		String jsonString =
+				"""
+						{
+						  "id": 5,
+						  "username": "kat",
+						  "commentLikedId": 4
+						}
+						""";
+		assertThat(jsonLikedComment.parse(jsonString)).isEqualTo(likedComment);
+		var parsedObject = jsonLikedComment.parseObject(jsonString);
+		assertThat(parsedObject.id()).isEqualTo(5);
+		assertThat(parsedObject.commentLikedId()).isEqualTo(4);
+		assertThat(parsedObject.username()).isEqualTo("kat");
+	}
+
+	@Test
+	void singleLikedPostDeserializationTest() throws IOException {
+		String jsonString =
+				"""
+						{
+						  "id": 5,
+						  "username": "kat",
+						  "postLikedId": 4
+						}
+						""";
+		assertThat(jsonLikedPost.parse(jsonString)).isEqualTo(likedPost);
+		var parsedObject = jsonLikedPost.parseObject(jsonString);
+		assertThat(parsedObject.id()).isEqualTo(5);
+		assertThat(parsedObject.postLikedId()).isEqualTo(4);
+		assertThat(parsedObject.username()).isEqualTo("kat");
 	}
 }

@@ -14,6 +14,8 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
+import static com.legoaggelos.catplace.security.util.AdminCertifier.isAdmin;
+
 @RestController
 @RequestMapping("/catposts")
 public class PostController {
@@ -35,7 +37,7 @@ public class PostController {
         }
         String catOwner = post.get().userOwner();
         String username = authentication.getName();
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
         if ((catOwner.equals(username) || admin) || post.get().isApproved()) {
             return ResponseEntity.ok(post.get());
         } else {
@@ -87,7 +89,7 @@ public class PostController {
         }
 
 
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
         //gotta do some extra stuff to check if the user owns the cat
         boolean owns = repository.existsByIdAndUserOwner(requestedId, authentication.getName());
         if (owns || admin) {
@@ -105,7 +107,7 @@ public class PostController {
             return !posts.isEmpty() ? ResponseEntity.ok(posts) : ResponseEntity.notFound().build();
         }
 
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
         boolean owns = authentication.getName().equals(requestedId);
         if (admin || owns) {
             List<Post> posts = getAllPostsByUserId(requestedId, pageable);
@@ -123,7 +125,7 @@ public class PostController {
     @PostMapping
     private ResponseEntity<Void> createPost(@RequestBody Post newPostRequest, UriComponentsBuilder ucb, Authentication authentication) {
         String username = authentication.getName();
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
         Post request = new Post(null,
                 newPostRequest.image(),
                 0L,
@@ -142,7 +144,7 @@ public class PostController {
 
     @DeleteMapping("/{requestedId}")
     private ResponseEntity<Void> deletePost(@PathVariable Long requestedId, Authentication authentication) {
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
         if (admin && repository.existsById(requestedId) || repository.existsByIdAndUserOwner(requestedId, authentication.getName())) {
             repository.deleteById(requestedId);
             return ResponseEntity.noContent().build();
@@ -152,7 +154,7 @@ public class PostController {
 
     @DeleteMapping("/fromCatId/{requestedId}")
     private ResponseEntity<List<Void>> deletePostsFromCatOwner(@PathVariable Long requestedId, Authentication authentication) {
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
 
         //requestedId is catId. If a post exists by a cat and by the principal, that means the principal owns the cat.
         boolean owns = repository.existsByCatOwnerAndUserOwner(requestedId, authentication.getName());
@@ -168,7 +170,7 @@ public class PostController {
 
     @DeleteMapping("/fromOwnerId/{requestedId}")
     private ResponseEntity<Void> deletePostsFromUserOwner(@PathVariable String requestedId, Authentication authentication) {
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
         if (admin && repository.existsByUserOwner(requestedId) || requestedId.equals(authentication.getName())) {
             Long amountDeleted = repository.deleteAllByUserOwner(requestedId);
             if (amountDeleted.equals(0)) {
@@ -187,7 +189,7 @@ public class PostController {
             return ResponseEntity.notFound().build();
         }
 
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
         boolean owns = repository.existsByIdAndUserOwner(requestedId, authentication.getName());
         Post post = postOptional.get();
         Post update = new Post(requestedId,

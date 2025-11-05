@@ -4,7 +4,7 @@
   "postId": 4,
   "likeCount": 0,
   "poster": "kat",
-  "postPoster": "kat",
+  "postUserPoster": "kat",
   "postCatPoster": 4,
   "postTime": "2025-04-08T02:45:45Z",
   "replyingTo": 3

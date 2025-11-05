@@ -26,40 +26,26 @@ public class CatPlaceUser implements Persistable<String> {
     private SerialBlob profilePicture;
     private String bio;
     private String email;
-    private List<Long> likedPosts;
-    private List<Long> likedComments;
-    private List<Long> likedReplies;
     private boolean isAdmin;
     @Transient
     private boolean isNew = true;
 
-    private void initLists(){
-        likedPosts = new ArrayList<>();
-        likedComments = new ArrayList<>();
-        likedReplies = new ArrayList<>();
-    }
-    public CatPlaceUser(String displayName, String username, SerialBlob profilePicture, String bio, String email, List<Long> likedPosts, List<Long> likedComments, List<Long> likedReplies, boolean isAdmin, boolean isNew) {
+    public CatPlaceUser(String displayName, String username, SerialBlob profilePicture, String bio, String email, boolean isAdmin, boolean isNew) {
         this.username = username;
         this.displayName = displayName;
         this.profilePicture = profilePicture;
         this.bio = bio;
         this.email = email;
-        this.likedPosts = likedPosts;
-        this.likedComments = likedComments;
-        this.likedReplies = likedReplies;
         this.isAdmin = isAdmin;
         this.isNew=isNew;
     }
     @JsonCreator
-    public CatPlaceUser(String displayName, String username, @JsonDeserialize(using = SerialBlobDeserializer.class) SerialBlob profilePicture, String bio, String email, List<Long> likedPosts, List<Long> likedComments, List<Long> likedReplies, boolean isAdmin) {
+    public CatPlaceUser(String displayName, String username, @JsonDeserialize(using = SerialBlobDeserializer.class) SerialBlob profilePicture, String bio, String email, boolean isAdmin) {
         this.username = username;
         this.displayName = displayName;
         this.profilePicture = profilePicture;
         this.bio = bio;
         this.email = email;
-        this.likedPosts = likedPosts;
-        this.likedComments = likedComments;
-        this.likedReplies = likedReplies;
         this.isAdmin = isAdmin;
     }
 
@@ -69,7 +55,6 @@ public class CatPlaceUser implements Persistable<String> {
         this.profilePicture = profilePicture;
         this.bio = bio;
         this.email = email;
-        initLists();
         isAdmin=false;
     }
 
@@ -88,7 +73,6 @@ public class CatPlaceUser implements Persistable<String> {
         profilePicture=null;
         bio="";
         email="";
-        initLists();
         isAdmin=false;
     }
 
@@ -102,18 +86,6 @@ public class CatPlaceUser implements Persistable<String> {
 
     public String getEmail() {
         return email;
-    }
-
-    public List<Long> getLikedPosts() {
-        return likedPosts;
-    }
-
-    public List<Long> getLikedComments() {
-        return likedComments;
-    }
-
-    public List<Long> getLikedReplies() {
-        return likedReplies;
     }
 
     public boolean isAdmin() {

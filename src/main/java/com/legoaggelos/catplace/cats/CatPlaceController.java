@@ -31,6 +31,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.sql.rowset.serial.SerialBlob;
 
+import static com.legoaggelos.catplace.security.util.AdminCertifier.isAdmin;
+
 @RestController
 @RequestMapping("/cats")
 public class CatPlaceController {
@@ -44,7 +46,7 @@ public class CatPlaceController {
 
     @DeleteMapping("/fromOwner/{requestedOwner}")
     ResponseEntity<Void> deleteByUser(@PathVariable String requestedOwner, Authentication authentication) {
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
         if (admin || requestedOwner.equals(authentication.getName())) {
             repository.deleteAllByOwner(requestedOwner);
             return ResponseEntity.noContent().build();
@@ -114,7 +116,7 @@ public class CatPlaceController {
             System.out.println("Error: couldn't read default profile picture. This is a major bug."); //TODO proper logging
         }
         boolean isAlive = OffsetDateTime.now().getYear()-newCatRequest.dateOfBirth().getYear()<30 && newCatRequest.isAlive(); //if the cat is over 30, realistically, it is dead.;
-        if (authentication.getAuthorities().toString().contains("ADMIN")) {
+        if (isAdmin(authentication)) {
             isAlive = newCatRequest.isAlive();
         }
         Cat catWithOwner = new Cat(null,
@@ -135,7 +137,7 @@ public class CatPlaceController {
 
     @PutMapping("/{requestedId}")
     private ResponseEntity<Void> putCat(@PathVariable Long requestedId, @RequestBody Cat catUpdate, Authentication authentication) {
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
         Cat cat = findCat(requestedId, authentication);
 
         OffsetDateTime dateOfBirth = null; //cant update date of birth!
@@ -171,7 +173,7 @@ public class CatPlaceController {
 
     @DeleteMapping("/{id}")
     private ResponseEntity<Void> deleteCat(@PathVariable Long id, Authentication authentication) {
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
         if (repository.existsByIdAndOwner(id, authentication.getName()) || (admin && repository.existsById(id))) {
             repository.deleteById(id);
             return ResponseEntity.noContent().build();

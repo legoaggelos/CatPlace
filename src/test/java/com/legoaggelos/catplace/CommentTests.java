@@ -16,6 +16,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -58,8 +59,8 @@ public class CommentTests {
         String poster = documentContext.read("$.poster");
         assertThat(poster).isEqualTo("paul");
 
-        String postPoster = documentContext.read("$.postPoster");
-        assertThat(postPoster).isEqualTo("kat");
+        String postUserPoster = documentContext.read("$.postUserPoster");
+        assertThat(postUserPoster).isEqualTo("kat");
 
         String postTime = documentContext.read("$.postTime");
         assertThat(postTime).isEqualTo("2025-04-08T02:45:30Z");
@@ -171,8 +172,8 @@ public class CommentTests {
         String poster = documentContext.read("$.poster");
         assertThat(poster).isEqualTo("legoaggelos");
 
-        String postPoster = documentContext.read("$.postPoster");
-        assertThat(postPoster).isEqualTo("kat");
+        String postUserPoster = documentContext.read("$.postUserPoster");
+        assertThat(postUserPoster).isEqualTo("kat");
 
         OffsetDateTime postTime = OffsetDateTime.parse(documentContext.read("$.postTime"));
         assertThat(Instant.now().getEpochSecond()-postTime.toEpochSecond()).isLessThan(60);
@@ -232,8 +233,8 @@ public class CommentTests {
         String poster = documentContext.read("$.poster");
         assertThat(poster).isEqualTo("paul");
 
-        String postPoster = documentContext.read("$.postPoster");
-        assertThat(postPoster).isEqualTo("kat");
+        String postUserPoster = documentContext.read("$.postUserPoster");
+        assertThat(postUserPoster).isEqualTo("kat");
 
         String postTime = documentContext.read("$.postTime");
         assertThat(postTime).isEqualTo("2025-04-08T02:45:30Z");
@@ -278,8 +279,8 @@ public class CommentTests {
         String poster = documentContext.read("$.poster");
         assertThat(poster).isEqualTo("paul");
 
-        String postPoster = documentContext.read("$.postPoster");
-        assertThat(postPoster).isEqualTo("kat");
+        String postUserPoster = documentContext.read("$.postUserPoster");
+        assertThat(postUserPoster).isEqualTo("kat");
 
         String postTime = documentContext.read("$.postTime");
         assertThat(postTime).isEqualTo("2025-04-08T02:45:30Z");
@@ -346,8 +347,8 @@ public class CommentTests {
         String poster = documentContext.read("$.poster");
         assertThat(poster).isEqualTo("paul");
 
-        String postPoster = documentContext.read("$.postPoster");
-        assertThat(postPoster).isEqualTo("kat");
+        String postUserPoster = documentContext.read("$.postUserPoster");
+        assertThat(postUserPoster).isEqualTo("kat");
 
         String postTime = documentContext.read("$.postTime");
         assertThat(postTime).isEqualTo("2025-04-08T02:45:30Z");
@@ -391,8 +392,8 @@ public class CommentTests {
         String poster = documentContext.read("$.poster");
         assertThat(poster).isEqualTo("paul");
 
-        String postPoster = documentContext.read("$.postPoster");
-        assertThat(postPoster).isEqualTo("kat");
+        String postUserPoster = documentContext.read("$.postUserPoster");
+        assertThat(postUserPoster).isEqualTo("kat");
 
         String postTime = documentContext.read("$.postTime");
         assertThat(postTime).isEqualTo("2025-04-08T02:45:30Z");
@@ -459,6 +460,7 @@ public class CommentTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeleteOwnComments() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("kat", "xyz789")
@@ -480,6 +482,7 @@ public class CommentTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeleteOthersCommentsIfAdmin() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -542,6 +545,7 @@ public class CommentTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeleteCommentsOnOwnPosts() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("kat", "xyz789")
@@ -563,6 +567,7 @@ public class CommentTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeleteCommentsOnOthersPostsIfAdmin() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -625,6 +630,7 @@ public class CommentTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeleteCommentsOnOwnCatsPosts() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("kat", "xyz789")
@@ -633,19 +639,20 @@ public class CommentTests {
 
         ResponseEntity<String> getResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
-                .exchange("/comments/getFromCatPoster/4", HttpMethod.GET, null, String.class);
+                .exchange("/comments/getFromPostCatPoster/4", HttpMethod.GET, null, String.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(getResponse.getBody()).isNullOrEmpty();
 
         ResponseEntity<String> otherGets = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
-                .exchange("/comments/getFromCatPoster/5", HttpMethod.GET, null, String.class);
+                .exchange("/comments/getFromPostCatPoster/5", HttpMethod.GET, null, String.class);
         assertThat(otherGets.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(((JSONArray)JsonPath.parse(otherGets.getBody()).read("$[*]")).size()).isEqualTo(2);
     }
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeleteCommentsOnOthersCatsPostsIfAdmin() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -654,13 +661,13 @@ public class CommentTests {
 
         ResponseEntity<String> getResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
-                .exchange("/comments/getFromCatPoster/4", HttpMethod.GET, null, String.class);
+                .exchange("/comments/getFromPostCatPoster/4", HttpMethod.GET, null, String.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(getResponse.getBody()).isNullOrEmpty();
 
         ResponseEntity<String> otherGets = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
-                .exchange("/comments/getFromCatPoster/5", HttpMethod.GET, null, String.class);
+                .exchange("/comments/getFromPostCatPoster/5", HttpMethod.GET, null, String.class);
         assertThat(otherGets.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(((JSONArray)JsonPath.parse(otherGets.getBody()).read("$[*]")).size()).isEqualTo(2);
     }
@@ -675,7 +682,7 @@ public class CommentTests {
 
         ResponseEntity<String> getResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
-                .exchange("/comments/getFromCatPoster/4", HttpMethod.GET, null, String.class);
+                .exchange("/comments/getFromPostCatPoster/4", HttpMethod.GET, null, String.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(((JSONArray)JsonPath.parse(getResponse.getBody()).read("$[*]")).size()).isEqualTo(3);
     }
@@ -689,17 +696,18 @@ public class CommentTests {
 
         ResponseEntity<String> getResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
-                .exchange("/comments/getFromCatPoster/4", HttpMethod.GET, null, String.class);
+                .exchange("/comments/getFromPostCatPoster/4", HttpMethod.GET, null, String.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(((JSONArray)JsonPath.parse(getResponse.getBody()).read("$[*]")).size()).isEqualTo(3);
     }
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeleteRepliesInOwnComment() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("kat", "xyz789")
-                .exchange("/comments/deleteByParentComment/3", HttpMethod.DELETE, null, Void.class);
+                .exchange("/comments/deleteByReplyingTo/3", HttpMethod.DELETE, null, Void.class);
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         ResponseEntity<String> getResponse = restTemplate
@@ -717,10 +725,11 @@ public class CommentTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeleteRepliesInOthersCommentIfAdmin() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
-                .exchange("/comments/deleteByParentComment/3", HttpMethod.DELETE, null, Void.class);
+                .exchange("/comments/deleteByReplyingTo/3", HttpMethod.DELETE, null, Void.class);
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         ResponseEntity<String> getResponse = restTemplate
@@ -741,7 +750,7 @@ public class CommentTests {
     void shouldNotDeleteRepliesInOthersCommentIfNotAdmin() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("paul", "abc123")
-                .exchange("/comments/deleteByParentComment/3", HttpMethod.DELETE, null, Void.class);
+                .exchange("/comments/deleteByReplyingTo/3", HttpMethod.DELETE, null, Void.class);
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 
         ResponseEntity<String> getResponse = restTemplate
@@ -760,7 +769,7 @@ public class CommentTests {
     @DirtiesContext
     void shouldNotDeleteRepliesInOthersCommentIfNotAuthed() {
         ResponseEntity<Void> deleteResponse = restTemplate
-                .exchange("/comments/deleteByParentComment/3", HttpMethod.DELETE, null, Void.class);
+                .exchange("/comments/deleteByReplyingTo/3", HttpMethod.DELETE, null, Void.class);
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
         ResponseEntity<String> getResponse = restTemplate
@@ -814,22 +823,22 @@ public class CommentTests {
     }
 
     @Test
-    void shouldNotAllowDeleteByParentCommentInOtherHttpMethods() {
+    void shouldNotAllowdeleteByReplyingToInOtherHttpMethods() {
         ResponseEntity<String> getResponse = restTemplate
                 .withBasicAuth("legoaggelos","admin") //doesnt own the replyingTo3 comments
-                .exchange("/comments/deleteByParentComment/3", HttpMethod.GET, null, String.class);
+                .exchange("/comments/deleteByReplyingTo/3", HttpMethod.GET, null, String.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(getResponse.getBody()).isNullOrEmpty();
 
         ResponseEntity<String> postResponse = restTemplate
                 .withBasicAuth("legoaggelos","admin") //doesnt own the replyingTo3 comments
-                .exchange("/comments/deleteByParentComment/3", HttpMethod.POST, null, String.class);
+                .exchange("/comments/deleteByReplyingTo/3", HttpMethod.POST, null, String.class);
         assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(postResponse.getBody()).isNullOrEmpty();
 
         ResponseEntity<String> putResponse = restTemplate
                 .withBasicAuth("legoaggelos","admin") //doesnt own the replyingTo3 comments
-                .exchange("/comments/deleteByParentComment/3", HttpMethod.PUT, null, String.class);
+                .exchange("/comments/deleteByReplyingTo/3", HttpMethod.PUT, null, String.class);
         assertThat(putResponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(putResponse.getBody()).isNullOrEmpty();
     }
@@ -877,10 +886,10 @@ public class CommentTests {
     }
 
     @Test
-    void shouldNotAllowRegularUserToUseAdminGetFromCatPoster() {
+    void shouldNotAllowRegularUserToUseAdmingetFromPostCatPoster() {
         ResponseEntity<String> getResponse = restTemplate
                 .withBasicAuth("kat", "xyz789")
-                .getForEntity("/comments/getFromCatPoster/4", String.class);
+                .getForEntity("/comments/getFromPostCatPoster/4", String.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(getResponse.getBody()).isNullOrEmpty();
     }

@@ -16,6 +16,8 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
+import static com.legoaggelos.catplace.security.util.AdminCertifier.isAdmin;
+
 @RestController
 @RequestMapping("/users")
 public class CatPlaceUserController {
@@ -47,7 +49,7 @@ public class CatPlaceUserController {
         } catch (SQLException | IOException e) {
             System.out.println("Error: couldn't read default profile picture. This is a major bug."); //TODO proper logging
         }
-        CatPlaceUser user = new CatPlaceUser(newCatPlaceUserRequest.getDisplayName(), newCatPlaceUserRequest.getUsername(), profilePicture, newCatPlaceUserRequest.getBio(), newCatPlaceUserRequest.getEmail(), newCatPlaceUserRequest.getLikedPosts(), newCatPlaceUserRequest.getLikedComments(), newCatPlaceUserRequest.getLikedReplies(), newCatPlaceUserRequest.isAdmin());
+        CatPlaceUser user = new CatPlaceUser(newCatPlaceUserRequest.getDisplayName(), newCatPlaceUserRequest.getUsername(), profilePicture, newCatPlaceUserRequest.getBio(), newCatPlaceUserRequest.getEmail(), newCatPlaceUserRequest.isAdmin());
         CatPlaceUser savedCatPlaceUser = catPlaceUserRepository.save(user);
         URI locationOfNewCat = ucb
                 .path("/users/" + newCatPlaceUserRequest.getUsername())
@@ -58,7 +60,7 @@ public class CatPlaceUserController {
 
     @DeleteMapping("/{requestedUsername}")
     private ResponseEntity<Void> deleteCatPlaceUser(@PathVariable String requestedUsername, Authentication authentication) {
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
         if (catPlaceUserRepository.existsByUsername(requestedUsername) && (requestedUsername.equals(authentication.getName()) || admin)) {
             catPlaceUserRepository.deleteById(requestedUsername);
             return ResponseEntity.noContent().build();
@@ -68,14 +70,14 @@ public class CatPlaceUserController {
 
     @PutMapping("/{requestedUsername}")
     private ResponseEntity<Void> putCatPlaceUser(@PathVariable String requestedUsername, @RequestBody CatPlaceUser newCatPlaceUserRequest, UriComponentsBuilder ucb, Authentication authentication) {
-        boolean admin = authentication.getAuthorities().toString().contains("ADMIN");
+        boolean admin = isAdmin(authentication);
         Optional<CatPlaceUser> catPlaceUser = catPlaceUserRepository.findByUsername(requestedUsername);
         if (catPlaceUser.isEmpty()) {
             return ResponseEntity.notFound().build();
         } else if ((!admin && !authentication.getName().equals(catPlaceUser.get().getUsername()))) {
             return ResponseEntity.notFound().build();
         }
-        CatPlaceUser newCatPlaceUser = new CatPlaceUser(newCatPlaceUserRequest.getDisplayName(), requestedUsername, newCatPlaceUserRequest.getProfilePicture(), (admin) ? catPlaceUser.get().getBio()/*should not let admin update bio*/ : newCatPlaceUserRequest.getBio(), newCatPlaceUserRequest.getEmail(), newCatPlaceUserRequest.getLikedPosts(), newCatPlaceUserRequest.getLikedComments(), newCatPlaceUserRequest.getLikedReplies(), newCatPlaceUserRequest.isAdmin() && admin, false);
+        CatPlaceUser newCatPlaceUser = new CatPlaceUser(newCatPlaceUserRequest.getDisplayName(), requestedUsername, newCatPlaceUserRequest.getProfilePicture(), (admin) ? catPlaceUser.get().getBio()/*should not let admin update bio*/ : newCatPlaceUserRequest.getBio(), newCatPlaceUserRequest.getEmail(), newCatPlaceUserRequest.isAdmin() && admin, false);
         catPlaceUserRepository.save(newCatPlaceUser);
         return ResponseEntity.noContent().build();
     }

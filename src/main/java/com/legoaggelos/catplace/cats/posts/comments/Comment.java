@@ -9,7 +9,7 @@ public record Comment(@Id Long id,
                       Long likeCount,
                       Long postId,
                       String poster/*the one who posted the comment*/,
-                      String postPoster/*the one who posted the post the comment belongs in*/,
+                      String postUserPoster/*the one who posted the post the comment belongs in*/,
                       Long postCatPoster/*the cat who posted the post the comment belongs in*/,
                       OffsetDateTime postTime,
                       Long replyingTo) {

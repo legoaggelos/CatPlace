@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.jdbc.Sql;
 
 import javax.sql.rowset.serial.SerialBlob;
 import java.io.IOException;
@@ -477,6 +478,7 @@ public class CatPostApplicationTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeletePost() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("paul", "abc123")
@@ -528,6 +530,7 @@ public class CatPostApplicationTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeletePostOthersPostIfAdmin() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -566,6 +569,7 @@ public class CatPostApplicationTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeleteAllPostsByUser() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("paul", "abc123")
@@ -585,6 +589,7 @@ public class CatPostApplicationTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeleteAllPostsByOtherUserIfAdmin() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -619,6 +624,7 @@ public class CatPostApplicationTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeleteAllPostsByCat() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("paul", "abc123")
@@ -638,6 +644,7 @@ public class CatPostApplicationTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
     void shouldDeleteAllPostsByCatByOtherUserIfAdmin() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
