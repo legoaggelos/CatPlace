@@ -902,4 +902,17 @@ public class CommentTests {
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(getResponse.getBody()).isNullOrEmpty();
     }
+    @Test
+    @DirtiesContext
+    void shouldNotDeleteCommentWhenItHasLikes() {
+        ResponseEntity<Void> response = restTemplate
+                .withBasicAuth("legoaggelos", "admin")
+                .exchange("/comments/4", HttpMethod.DELETE, null, Void.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        ResponseEntity<String> get = restTemplate
+                .getForEntity("/comments/4", String.class);
+        assertThat(get.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(get.getBody()).isNotEmpty();
+    }
 }

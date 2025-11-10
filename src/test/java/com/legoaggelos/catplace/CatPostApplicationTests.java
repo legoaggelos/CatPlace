@@ -478,7 +478,7 @@ public class CatPostApplicationTests {
 
     @Test
     @DirtiesContext
-    @Sql("/delete-comments-posts.sql")
+    @Sql("/delete-not-liked-comments-and-liked.sql")
     void shouldDeletePost() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("paul", "abc123")
@@ -530,7 +530,7 @@ public class CatPostApplicationTests {
 
     @Test
     @DirtiesContext
-    @Sql("/delete-comments-posts.sql")
+    @Sql("/delete-not-liked-comments-and-liked.sql")
     void shouldDeletePostOthersPostIfAdmin() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -569,7 +569,7 @@ public class CatPostApplicationTests {
 
     @Test
     @DirtiesContext
-    @Sql("/delete-comments-posts.sql")
+    @Sql("/delete-not-liked-comments-and-liked.sql")
     void shouldDeleteAllPostsByUser() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("paul", "abc123")
@@ -589,7 +589,7 @@ public class CatPostApplicationTests {
 
     @Test
     @DirtiesContext
-    @Sql("/delete-comments-posts.sql")
+    @Sql("/delete-not-liked-comments-and-liked.sql")
     void shouldDeleteAllPostsByOtherUserIfAdmin() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -624,7 +624,7 @@ public class CatPostApplicationTests {
 
     @Test
     @DirtiesContext
-    @Sql("/delete-comments-posts.sql")
+    @Sql("/delete-not-liked-comments-and-liked.sql")
     void shouldDeleteAllPostsByCat() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("paul", "abc123")
@@ -644,7 +644,7 @@ public class CatPostApplicationTests {
 
     @Test
     @DirtiesContext
-    @Sql("/delete-comments-posts.sql")
+    @Sql("/delete-not-liked-comments-and-liked.sql")
     void shouldDeleteAllPostsByCatByOtherUserIfAdmin() {
         ResponseEntity<Void> deleteResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -920,5 +920,19 @@ public class CatPostApplicationTests {
 
         Object isApproved = documentContext.read("$.isApproved");
         assertThat(isApproved).isEqualTo(true);
+    }
+    @Test
+    @DirtiesContext
+    @Sql("/delete-not-liked-comments-posts.sql")
+    void shouldNotDeletePostWhenItHasComments() {
+        ResponseEntity<Void> response = restTemplate
+                .withBasicAuth("legoaggelos", "admin")
+                .exchange("/users/kat", HttpMethod.DELETE, null, Void.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        ResponseEntity<String> get = restTemplate
+                .getForEntity("/users/kat", String.class);
+        assertThat(get.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(get.getBody()).isNotEmpty();
     }
 }

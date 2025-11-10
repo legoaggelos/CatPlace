@@ -189,7 +189,7 @@ public class CatPlaceUserApplicationTests {
 
     @Test
     @DirtiesContext
-    @Sql("/delete-comments-posts.sql") // to not have liked connections mess with delete permissions
+    @Sql("/delete-not-liked-cats-posts-comments.sql") // to not have liked connections mess with delete permissions
     void shouldDeleteUser() {
         ResponseEntity<Void> response = restTemplate
                 .withBasicAuth("kat", "xyz789")
@@ -220,7 +220,7 @@ public class CatPlaceUserApplicationTests {
 
     @Test
     @DirtiesContext
-    @Sql("/delete-comments-posts.sql") // to not have liked connections mess with delete permissions
+    @Sql("/delete-not-liked-cats-posts-comments.sql") // to not have liked connections mess with delete permissions
     void shouldDeleteOtherUserWhenAdmin() {
         ResponseEntity<Void> response = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -360,5 +360,19 @@ public class CatPlaceUserApplicationTests {
                 .getForEntity("/users/SUfTHEWuhtiwfaFHUIWgrfa", String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).isEqualTo(null);
+    }
+    @Test
+    @DirtiesContext
+    @Sql("/delete-comments-posts.sql")
+    void shouldNotDeletePostWhenItHasComments() {
+        ResponseEntity<Void> response = restTemplate
+                .withBasicAuth("legoaggelos", "admin")
+                .exchange("/catposts/5", HttpMethod.DELETE, null, Void.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        ResponseEntity<String> get = restTemplate
+                .getForEntity("/catposts/5", String.class);
+        assertThat(get.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(get.getBody()).isNotEmpty();
     }
 }

@@ -14,6 +14,7 @@ import java.util.Base64;
 import java.util.LinkedHashMap;
 
 import com.legoaggelos.catplace.cats.Cat;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -26,6 +27,7 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
 import net.minidev.json.JSONArray;
+import org.springframework.test.context.jdbc.Sql;
 
 import javax.sql.rowset.serial.SerialBlob;
 
@@ -39,6 +41,8 @@ class CatApplicationTests {
     
 
     protected static final OffsetDateTime sampleDate = OffsetDateTime.of(2025,4, 8, 2, 30, 30, 0, ZoneOffset.ofHours(0));
+
+
 
     @Test
     void shouldReturnACatWhenDataIsSaved() throws IOException {
@@ -215,7 +219,8 @@ class CatApplicationTests {
         Cat newCat = new Cat(null, "pekos", sampleDate, null, testPfp, "random", true);
         ResponseEntity<Void> createResponse = restTemplate
                 .withBasicAuth("paul", "abc123")
-                .postForEntity("/cats", newCat, Void.class);
+                .exchange("/cats", HttpMethod.POST, new HttpEntity<>(newCat, csrf()));
+
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         URI locationOfNewCat = createResponse.getHeaders().getLocation();
@@ -584,6 +589,7 @@ class CatApplicationTests {
     }
     @Test
     @DirtiesContext
+    @Sql("/delete-not-liked-comments-posts.sql")
     void shouldDeleteAnExistingCat() {
         ResponseEntity<Void> response = restTemplate
                 .withBasicAuth("paul", "abc123")
@@ -645,6 +651,7 @@ class CatApplicationTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-not-liked-comments-posts.sql")
     void shouldAllowDeletionOfCatsTheyDoNotOwnWhenAdmin() {
 
         ResponseEntity<Void> deleteResponse = restTemplate
@@ -659,6 +666,7 @@ class CatApplicationTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-not-liked-comments-posts.sql")
     void shouldDeleteAllUsersCats() {
         ResponseEntity<Void> response = restTemplate
                 .withBasicAuth("paul", "abc123")
@@ -673,6 +681,7 @@ class CatApplicationTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-not-liked-comments-posts.sql")
     void shouldDeleteAllUsersCatsIfAdmin() {
         ResponseEntity<Void> response = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -687,6 +696,7 @@ class CatApplicationTests {
 
     @Test
     @DirtiesContext
+    @Sql("/delete-not-liked-comments-posts.sql")
     void shouldNotDeleteAllUsersCatsIfNotAdmin() {
         ResponseEntity<Void> response = restTemplate
                 .withBasicAuth("kat", "xyz789")
@@ -747,5 +757,19 @@ class CatApplicationTests {
         JSONArray x = documentContext.read("$..profilePicture");
         assertThat(x).isNotNull();
         //assertThat(x).containsExactlyInAnyOrder(Files.readAllBytes(testFile)); excluded because it needs to be created via code for the default to work, not the default data
+    }
+    @Test
+    @DirtiesContext
+    @Sql("/delete-not-liked-comments-and-liked.sql")
+    void shouldNotDeleteCatWhenItHasPosts() {
+        ResponseEntity<Void> response = restTemplate
+                .withBasicAuth("legoaggelos", "admin")
+                .exchange("/cats/5", HttpMethod.DELETE, null, Void.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        ResponseEntity<String> get = restTemplate
+                .getForEntity("/cats/5", String.class);
+        assertThat(get.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(get.getBody()).isNotEmpty();
     }
 }
