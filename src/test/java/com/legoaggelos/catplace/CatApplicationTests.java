@@ -219,7 +219,7 @@ class CatApplicationTests {
         Cat newCat = new Cat(null, "pekos", sampleDate, null, testPfp, "random", true);
         ResponseEntity<Void> createResponse = restTemplate
                 .withBasicAuth("paul", "abc123")
-                .exchange("/cats", HttpMethod.POST, new HttpEntity<>(newCat, csrf()));
+                .postForEntity("/cats", newCat, Void.class);
 
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
