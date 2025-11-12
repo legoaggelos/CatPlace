@@ -13,6 +13,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 
@@ -45,7 +46,12 @@ public class CatPlaceUserApplicationTests {
     void shouldCreateNewUserWithNewPfp() throws IOException, SQLException {
         var testPfp = new SerialBlob(Files.readAllBytes(testFile));
         testPfp.truncate(500);
-        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", testPfp, "example bio", "examplemail@gmail.com", false);
+        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", testPfp, "example bio", "examplemail@gmail.com", false, "sample", new ArrayList<GrantedAuthority>(List.of(new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                return "USER";
+            }
+        })));
         ResponseEntity<Void> createResponse = restTemplate
                 .withBasicAuth("kat", "xyz789")
                 .postForEntity("/users", newCatPlaceUserRequest, Void.class);
@@ -124,7 +130,12 @@ public class CatPlaceUserApplicationTests {
     @Test
     @DirtiesContext
     void shouldCreateNewUser() throws IOException {
-        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", null, "example bio", "examplemail@gmail.com", false);
+        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", null, "example bio", "examplemail@gmail.com", false, "sample", new ArrayList<GrantedAuthority>(List.of(new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                return "USER";
+            }
+        })));
         ResponseEntity<Void> createResponse = restTemplate
                 .withBasicAuth("kat", "xyz789")
                 .postForEntity("/users", newCatPlaceUserRequest, Void.class);
@@ -160,7 +171,12 @@ public class CatPlaceUserApplicationTests {
     @Test
     @DirtiesContext
     void shouldCreateNewUserWhenUnauthenticated() {
-        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", null, "example bio", "examplemail@gmail.com", false);
+        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", null, "example bio", "examplemail@gmail.com", false, "sample", new ArrayList<GrantedAuthority>(List.of(new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                return "USER";
+            }
+        })));
         ResponseEntity<Void> createResponse = restTemplate
                 .postForEntity("/users", newCatPlaceUserRequest, Void.class);
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -179,7 +195,12 @@ public class CatPlaceUserApplicationTests {
     @Test
     @DirtiesContext
     void shouldNotCreateDuplicateUser() {
-        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "kat", null, "example bio", "examplemail@gmail.com", false);
+        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "kat", null, "example bio", "examplemail@gmail.com", false, "sample", new ArrayList<GrantedAuthority>(List.of(new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                return "USER";
+            }
+        })));
         ResponseEntity<Void> createResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
                 .postForEntity("/users", newCatPlaceUserRequest, Void.class);
@@ -249,7 +270,12 @@ public class CatPlaceUserApplicationTests {
     @Test
     @DirtiesContext
     void shouldUpdateUser() {
-        CatPlaceUser update = new CatPlaceUser("paul 2", "paul", null, "Owner of cats 2", "example@gmail.com 2");
+        CatPlaceUser update = new CatPlaceUser("paul 2", "paul", null, "Owner of cats 2", "example@gmail.com 2", false , "sample", new ArrayList<GrantedAuthority>(List.of(new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                return "USER";
+            }
+        })));
         HttpEntity<CatPlaceUser> request = new HttpEntity<>(update);
         ResponseEntity<Void> putResponse = restTemplate
                 .withBasicAuth("paul", "abc123")
@@ -282,7 +308,12 @@ public class CatPlaceUserApplicationTests {
     @Test
     @DirtiesContext
     void shouldNotUpdateAnotherUser() {
-        CatPlaceUser update = new CatPlaceUser("paul 2", "paul", null, "Owner of cats 2", "example@gmail.com 2");
+        CatPlaceUser update = new CatPlaceUser("paul 2", "paul", null, "Owner of cats 2", "example@gmail.com 2",false, "sample", new ArrayList<GrantedAuthority>(List.of(new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                return "USER";
+            }
+        })));
         HttpEntity<CatPlaceUser> request = new HttpEntity<>(update);
         ResponseEntity<Void> putResponse = restTemplate
                 .withBasicAuth("kat", "xyz789")
@@ -315,7 +346,12 @@ public class CatPlaceUserApplicationTests {
     @Test
     @DirtiesContext
     void shouldUpdateAnotherUserWhenAdmin() {
-        CatPlaceUser update = new CatPlaceUser("paul 2", "paul", null, "Owner of cats 2", "example@gmail.com 2");
+        CatPlaceUser update = new CatPlaceUser("paul 2", "paul", null, "Owner of cats 2", "example@gmail.com 2", false, "sample", new ArrayList<GrantedAuthority>(List.of(new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                return "USER";
+            }
+        })));
         HttpEntity<CatPlaceUser> request = new HttpEntity<>(update);
         ResponseEntity<Void> putResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -348,7 +384,12 @@ public class CatPlaceUserApplicationTests {
     @Test
     @DirtiesContext
     void shouldNotUpdateNonExistentUser() {
-        CatPlaceUser update = new CatPlaceUser("paul 2", "paul", null, "Owner of cats 2", "example@gmail.com 2");
+        CatPlaceUser update = new CatPlaceUser("paul 2", "paul", null, "Owner of cats 2", "example@gmail.com 2", false, "sample", new ArrayList<GrantedAuthority>(List.of(new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                return "USER";
+            }
+        })));
         HttpEntity<CatPlaceUser> request = new HttpEntity<>(update);
         ResponseEntity<Void> putResponse = restTemplate
                 .withBasicAuth("kat", "xyz789")

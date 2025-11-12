@@ -67,9 +67,9 @@ public class JsonTests {
 			new Cat(4L, "arabas", sampleDate, "kat", null, "arabian", true)
 		};
 		users = new CatPlaceUser[]{
-				new CatPlaceUser("legoaggelos", "legoaggelos", null, "Owner of site", "legoangel2010@gmail.com", true),
-				new CatPlaceUser("paul", "paul", null, "Owner of cats", "example@gmail.com"),
-				new CatPlaceUser("Katherine", "kat", null, "", null)
+				//new CatPlaceUser("legoaggelos", "legoaggelos", null, "Owner of site", "legoangel2010@gmail.com", true),
+				//new CatPlaceUser("paul", "paul", null, "Owner of cats", "example@gmail.com"),
+				//new CatPlaceUser("Katherine", "kat", null, "", null)
 		};
 		posts = new Post[] {
 			new Post(5L, null, 0L, 5L, "paul", "Cute cat!!",sampleDate, true),

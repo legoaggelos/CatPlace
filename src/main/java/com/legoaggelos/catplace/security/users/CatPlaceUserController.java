@@ -1,8 +1,16 @@
 package com.legoaggelos.catplace.security.users;
 
 import com.legoaggelos.catplace.cats.Cat;
+import com.legoaggelos.catplace.security.jwt.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -14,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static com.legoaggelos.catplace.security.util.AdminCertifier.isAdmin;
@@ -22,6 +31,12 @@ import static com.legoaggelos.catplace.security.util.AdminCertifier.isAdmin;
 @RequestMapping("/users")
 public class CatPlaceUserController {
     private final CatPlaceUserRepository catPlaceUserRepository;
+    @Autowired
+    AuthenticationManager authenticationManager;
+    @Autowired
+    PasswordEncoder passwordEncoder;
+    @Autowired
+    JwtUtil jwtUtils;
 
     public CatPlaceUserController(CatPlaceUserRepository catPlaceUserRepository) {
         this.catPlaceUserRepository = catPlaceUserRepository;
@@ -49,7 +64,12 @@ public class CatPlaceUserController {
         } catch (SQLException | IOException e) {
             System.out.println("Error: couldn't read default profile picture. This is a major bug."); //TODO proper logging
         }
-        CatPlaceUser user = new CatPlaceUser(newCatPlaceUserRequest.getDisplayName(), newCatPlaceUserRequest.getUsername(), profilePicture, newCatPlaceUserRequest.getBio(), newCatPlaceUserRequest.getEmail(), newCatPlaceUserRequest.isAdmin());
+        var authorities = new ArrayList<GrantedAuthority>();
+        authorities.add((GrantedAuthority) () -> "USER");
+        if (newCatPlaceUserRequest.isAdmin()) {
+            authorities.add((GrantedAuthority) () -> "ADMIN");
+        }
+        CatPlaceUser user = new CatPlaceUser(newCatPlaceUserRequest.getDisplayName(), newCatPlaceUserRequest.getUsername(), profilePicture, newCatPlaceUserRequest.getBio(), newCatPlaceUserRequest.getEmail(), false, passwordEncoder.encode(newCatPlaceUserRequest.getPassword()), authorities);
         CatPlaceUser savedCatPlaceUser = catPlaceUserRepository.save(user);
         URI locationOfNewCat = ucb
                 .path("/users/" + newCatPlaceUserRequest.getUsername())
@@ -77,8 +97,25 @@ public class CatPlaceUserController {
         } else if ((!admin && !authentication.getName().equals(catPlaceUser.get().getUsername()))) {
             return ResponseEntity.notFound().build();
         }
-        CatPlaceUser newCatPlaceUser = new CatPlaceUser(newCatPlaceUserRequest.getDisplayName(), requestedUsername, newCatPlaceUserRequest.getProfilePicture(), (admin) ? catPlaceUser.get().getBio()/*should not let admin update bio*/ : newCatPlaceUserRequest.getBio(), newCatPlaceUserRequest.getEmail(), newCatPlaceUserRequest.isAdmin() && admin, false);
+        var authorities = new ArrayList<GrantedAuthority>();
+        authorities.add((GrantedAuthority) () -> "USER");
+        if (newCatPlaceUserRequest.isAdmin() && admin) {
+            authorities.add((GrantedAuthority) () -> "ADMIN");
+        }
+        CatPlaceUser newCatPlaceUser = new CatPlaceUser(newCatPlaceUserRequest.getDisplayName(), requestedUsername, newCatPlaceUserRequest.getProfilePicture(), (admin) ? catPlaceUser.get().getBio()/*should not let admin update bio*/ : newCatPlaceUserRequest.getBio(), newCatPlaceUserRequest.getEmail(), newCatPlaceUserRequest.isAdmin() && admin, false, passwordEncoder.encode(newCatPlaceUserRequest.getPassword()), authorities);
         catPlaceUserRepository.save(newCatPlaceUser);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/signin")
+    public String authenticateUser(@RequestBody CatPlaceUser user) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        user.getUsername(),
+                        user.getPassword()
+                )
+        );
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return jwtUtils.generateToken(userDetails.getUsername());
     }
 }

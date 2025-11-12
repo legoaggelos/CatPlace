@@ -10,6 +10,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
+import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,17 +21,21 @@ import java.util.Collection;
 import java.util.List;
 
 
-public class CatPlaceUser implements Persistable<String> {
+public class CatPlaceUser extends User implements Persistable<String>, UserDetails, CredentialsContainer {
     private final @Id String username;
     private String displayName;
     private SerialBlob profilePicture;
     private String bio;
     private String email;
+    private String password;
     private boolean isAdmin;
     @Transient
     private boolean isNew = true;
+    @Transient
+    private List<GrantedAuthority> authorities;
 
-    public CatPlaceUser(String displayName, String username, SerialBlob profilePicture, String bio, String email, boolean isAdmin, boolean isNew) {
+    public CatPlaceUser(String displayName, String username, SerialBlob profilePicture, String bio, String email, boolean isAdmin, boolean isNew, String password, List<GrantedAuthority> authorities) {
+        super(username, password, authorities);
         this.username = username;
         this.displayName = displayName;
         this.profilePicture = profilePicture;
@@ -38,24 +43,18 @@ public class CatPlaceUser implements Persistable<String> {
         this.email = email;
         this.isAdmin = isAdmin;
         this.isNew=isNew;
+        this.password = password;
     }
     @JsonCreator
-    public CatPlaceUser(String displayName, String username, @JsonDeserialize(using = SerialBlobDeserializer.class) SerialBlob profilePicture, String bio, String email, boolean isAdmin) {
+    public CatPlaceUser(String displayName, String username, @JsonDeserialize(using = SerialBlobDeserializer.class) SerialBlob profilePicture, String bio, String email, boolean isAdmin, String password, List<GrantedAuthority> authorities) {
+        super(username, password, authorities);
         this.username = username;
         this.displayName = displayName;
         this.profilePicture = profilePicture;
         this.bio = bio;
         this.email = email;
         this.isAdmin = isAdmin;
-    }
-
-    public CatPlaceUser(String displayName, String username, SerialBlob profilePicture, String bio, String email) {
-        this.username = username;
-        this.displayName = displayName;
-        this.profilePicture = profilePicture;
-        this.bio = bio;
-        this.email = email;
-        isAdmin=false;
+        this.password=password;
     }
 
     public String getUsername() {
@@ -64,16 +63,6 @@ public class CatPlaceUser implements Persistable<String> {
 
     public String getDisplayName() {
         return displayName;
-    }
-
-    @PersistenceCreator
-    public CatPlaceUser(String username) {
-        this.displayName = username;
-        this.username = username;
-        profilePicture=null;
-        bio="";
-        email="";
-        isAdmin=false;
     }
 
     public SerialBlob getProfilePicture() {
@@ -100,5 +89,9 @@ public class CatPlaceUser implements Persistable<String> {
     @Override
     public boolean isNew() {
         return isNew;
+    }
+
+    public String getPassword() {
+        return password;
     }
 }
