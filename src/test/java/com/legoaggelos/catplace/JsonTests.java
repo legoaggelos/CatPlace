@@ -134,7 +134,6 @@ public class JsonTests {
 	void singleUserSerializationTest() throws IOException {
 		//paul
 		assertThat(jsonUser.write(users[1])).isStrictlyEqualToJson("single_user.json");
-		assertThat(jsonUser.write(users[1])).isStrictlyEqualToJson("single_user.json");
 		assertThat(jsonUser.write(users[1])).hasJsonPathStringValue("@.displayName");
 		assertThat(jsonUser.write(users[1])).extractingJsonPathStringValue("@.displayName")
 				.isEqualTo("paul");
@@ -219,7 +218,10 @@ public class JsonTests {
 				    "profilePicture": null,
 				    "bio": "Owner of cats",
 				    "email": "example@gmail.com",
-				    "admin": false,
+				    "roles": [
+				        "USER"
+				      ],
+				      "admin": false,
 				    "new": true
 					}
 				""";
@@ -228,7 +230,6 @@ public class JsonTests {
 		assertThat(jsonUser.parseObject(jsonString).getProfilePicture()).isEqualTo(null);
 		assertThat(jsonUser.parseObject(jsonString).getBio()).isEqualTo("Owner of cats");
 		assertThat(jsonUser.parseObject(jsonString).getEmail()).isEqualTo("example@gmail.com");
-		assertThat(jsonUser.parseObject(jsonString).isAdmin()).isEqualTo(false);
 	}
 
 	@Test

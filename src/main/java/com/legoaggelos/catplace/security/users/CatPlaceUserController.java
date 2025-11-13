@@ -37,7 +37,7 @@ public class CatPlaceUserController {
     }
 
     @PostMapping
-    private ResponseEntity<Void> createCatPlaceUser(@RequestBody CatPlaceUser newCatPlaceUserRequest, UriComponentsBuilder ucb, OutputStream outputStream) {
+    private ResponseEntity<Void> createCatPlaceUser(@RequestBody CatPlaceUser newCatPlaceUserRequest, UriComponentsBuilder ucb, OutputStream outputStream, Authentication authentication) {
         if (catPlaceUserRepository.existsByUsername(newCatPlaceUserRequest.getUsername())) {
             return ResponseEntity.badRequest().header("message", "Username "+newCatPlaceUserRequest.getUsername()+" is already taken.").build();
         }
@@ -49,7 +49,7 @@ public class CatPlaceUserController {
         } catch (SQLException | IOException e) {
             System.out.println("Error: couldn't read default profile picture. This is a major bug."); //TODO proper logging
         }
-        CatPlaceUser user = new CatPlaceUser(newCatPlaceUserRequest.getDisplayName(), newCatPlaceUserRequest.getUsername(), profilePicture, newCatPlaceUserRequest.getBio(), newCatPlaceUserRequest.getEmail(), newCatPlaceUserRequest.isAdmin());
+        CatPlaceUser user = new CatPlaceUser(newCatPlaceUserRequest.getDisplayName(), newCatPlaceUserRequest.getUsername(), profilePicture, newCatPlaceUserRequest.getBio(), newCatPlaceUserRequest.getEmail(), false); //cant create admin, have to become one
         CatPlaceUser savedCatPlaceUser = catPlaceUserRepository.save(user);
         URI locationOfNewCat = ucb
                 .path("/users/" + newCatPlaceUserRequest.getUsername())

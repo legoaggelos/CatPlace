@@ -20,7 +20,7 @@ CREATE TABLE CAT_PLACE_USER
     BIO             VARCHAR(1024)       DEFAULT '',
     PROFILE_PICTURE BINARY LARGE OBJECT DEFAULT NULL,
     EMAIL           VARCHAR(50)         DEFAULT NULL,
-    IS_ADMIN        BOOLEAN             DEFAULT FALSE
+    ROLES           VARCHAR(50) ARRAY DEFAULT NULL
     --CONSTRAINT fk_cat_place_users FOREIGN KEY (username) REFERENCES USERS (username) removed because of tests, should be used in prod
 );
 

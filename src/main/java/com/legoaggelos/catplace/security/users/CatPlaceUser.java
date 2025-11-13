@@ -26,7 +26,7 @@ public class CatPlaceUser implements Persistable<String> {
     private SerialBlob profilePicture;
     private String bio;
     private String email;
-    private boolean isAdmin;
+    private List<String> roles;
     @Transient
     private boolean isNew = true;
 
@@ -36,7 +36,11 @@ public class CatPlaceUser implements Persistable<String> {
         this.profilePicture = profilePicture;
         this.bio = bio;
         this.email = email;
-        this.isAdmin = isAdmin;
+        this.roles=new ArrayList<>();
+        roles.add("USER");
+        if (isAdmin) {
+            roles.add("ADMIN");
+        }
         this.isNew=isNew;
     }
     @JsonCreator
@@ -46,7 +50,11 @@ public class CatPlaceUser implements Persistable<String> {
         this.profilePicture = profilePicture;
         this.bio = bio;
         this.email = email;
-        this.isAdmin = isAdmin;
+        this.roles=new ArrayList<>();
+        roles.add("USER");
+        if (isAdmin) {
+            roles.add("ADMIN");
+        }
     }
 
     public CatPlaceUser(String displayName, String username, SerialBlob profilePicture, String bio, String email) {
@@ -55,7 +63,8 @@ public class CatPlaceUser implements Persistable<String> {
         this.profilePicture = profilePicture;
         this.bio = bio;
         this.email = email;
-        isAdmin=false;
+        this.roles=new ArrayList<>();
+        roles.add("USER");
     }
 
     public String getUsername() {
@@ -73,7 +82,8 @@ public class CatPlaceUser implements Persistable<String> {
         profilePicture=null;
         bio="";
         email="";
-        isAdmin=false;
+        this.roles=new ArrayList<>();
+        roles.add("USER");
     }
 
     public SerialBlob getProfilePicture() {
@@ -89,7 +99,7 @@ public class CatPlaceUser implements Persistable<String> {
     }
 
     public boolean isAdmin() {
-        return isAdmin;
+        return roles.contains("ADMIN");
     }
 
     @Override
@@ -100,5 +110,9 @@ public class CatPlaceUser implements Persistable<String> {
     @Override
     public boolean isNew() {
         return isNew;
+    }
+
+    public List<String> getRoles() {
+        return roles;
     }
 }

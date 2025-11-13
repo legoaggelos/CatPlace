@@ -1,5 +1,6 @@
 package com.legoaggelos.catplace.security;
 
+import com.legoaggelos.catplace.security.jwt.AuthTokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import javax.sql.DataSource;
@@ -21,6 +23,10 @@ import javax.sql.DataSource;
 @Configuration
 public class SecurityConfig {
 
+    @Bean
+    public AuthTokenFilter authenticationJwtTokenFilter() {
+        return new AuthTokenFilter();
+    }
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -52,6 +58,7 @@ public class SecurityConfig {
                 .httpBasic(Customizer.withDefaults())
                 //.csrf(csrf -> csrf.csrfTokenRepository
                   //      (CookieCsrfTokenRepository.withHttpOnlyFalse())); for prod
+                .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class)
                 .csrf(AbstractHttpConfigurer::disable);
         return http.build();
     }

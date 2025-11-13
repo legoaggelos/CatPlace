@@ -157,6 +157,53 @@ public class CatPlaceUserApplicationTests {
 
         
     }
+
+    @Test
+    @DirtiesContext
+    void shouldNotCreateAdminNewUser() throws IOException {
+        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", null, "example bio", "examplemail@gmail.com", true);
+        ResponseEntity<Void> createResponse = restTemplate
+                .withBasicAuth("kat", "xyz789")
+                .postForEntity("/users", newCatPlaceUserRequest, Void.class);
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+
+        ResponseEntity<String> response = restTemplate
+                .withBasicAuth("kat", "xyz789")
+                .getForEntity("/users/exampleusername", String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+        String username = documentContext.read("$.username");
+        assertThat(username).isEqualTo("exampleusername");
+
+        boolean isAdmin = documentContext.read("$.admin");
+        assertThat(isAdmin).isFalse();
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldNotCreateAdminNewUserEvenIfAdmin() throws IOException {
+        CatPlaceUser newCatPlaceUserRequest = new CatPlaceUser("examplename", "exampleusername", null, "example bio", "examplemail@gmail.com", true);
+        ResponseEntity<Void> createResponse = restTemplate
+                .withBasicAuth("legoaggelos", "admin")
+                .postForEntity("/users", newCatPlaceUserRequest, Void.class);
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+
+        ResponseEntity<String> response = restTemplate
+                .withBasicAuth("kat", "xyz789")
+                .getForEntity("/users/exampleusername", String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        DocumentContext documentContext = JsonPath.parse(response.getBody());
+
+        String username = documentContext.read("$.username");
+        assertThat(username).isEqualTo("exampleusername");
+
+        boolean isAdmin = documentContext.read("$.admin");
+        assertThat(isAdmin).isFalse();
+    }
+
     @Test
     @DirtiesContext
     void shouldCreateNewUserWhenUnauthenticated() {
@@ -249,7 +296,7 @@ public class CatPlaceUserApplicationTests {
     @Test
     @DirtiesContext
     void shouldUpdateUser() {
-        CatPlaceUser update = new CatPlaceUser("paul 2", "paul", null, "Owner of cats 2", "example@gmail.com 2");
+        CatPlaceUser update = new CatPlaceUser("paul 2", "paul", null, "Owner of cats 2", "example@gmail.com 2", true);
         HttpEntity<CatPlaceUser> request = new HttpEntity<>(update);
         ResponseEntity<Void> putResponse = restTemplate
                 .withBasicAuth("paul", "abc123")
@@ -315,7 +362,7 @@ public class CatPlaceUserApplicationTests {
     @Test
     @DirtiesContext
     void shouldUpdateAnotherUserWhenAdmin() {
-        CatPlaceUser update = new CatPlaceUser("paul 2", "paul", null, "Owner of cats 2", "example@gmail.com 2");
+        CatPlaceUser update = new CatPlaceUser("paul 2", "paul", null, "Owner of cats 2", "example@gmail.com 2", true);
         HttpEntity<CatPlaceUser> request = new HttpEntity<>(update);
         ResponseEntity<Void> putResponse = restTemplate
                 .withBasicAuth("legoaggelos", "admin")
@@ -342,7 +389,7 @@ public class CatPlaceUserApplicationTests {
         assertThat(email).isEqualTo("example@gmail.com 2");
 
         boolean isAdmin = documentContext.read("$.admin");
-        assertThat(isAdmin).isFalse();
+        assertThat(isAdmin).isTrue();
     }
 
     @Test

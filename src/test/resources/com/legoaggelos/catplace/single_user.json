@@ -5,6 +5,9 @@
   "profilePicture": null,
   "bio": "Owner of cats",
   "email": "example@gmail.com",
+  "roles": [
+    "USER"
+  ],
   "admin": false,
   "new": true
 }
